@@ -1,4 +1,4 @@
-# Piixl: Microservices Reference Architecture
+# Piixl
 
 Piixl is a high-performance, distributed system blueprint built with **Java 21**, **Spring Boot 3.4**, and **Spring Cloud**. 
 
