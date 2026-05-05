@@ -1,0 +1,27 @@
+<div class="login-container">
+  <div class="login-header">
+    <h1>p<strong>ii</strong>xl</h1>
+  </div>
+  <h2>Sign up for Piixl</h2>
+  <form class="login-form" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <app-default-input
+      label="Email"
+      [control]="loginForm.controls.email"
+      placeholder="Email"
+      type="email"
+    ></app-default-input>
+    <app-default-input
+      label="Password"
+      [control]="loginForm.controls.password"
+      placeholder="Password"
+      type="password"
+    ></app-default-input>
+    <app-default-button type="submit" title="Log in"></app-default-button>
+    <app-default-button
+      (buttonClicked)="onCreateNewAccount()"
+      variant="outline"
+      title="Create new account"
+    ></app-default-button>
+    <app-default-hyperlink title="Forgot password?"></app-default-hyperlink>
+  </form>
+</div>

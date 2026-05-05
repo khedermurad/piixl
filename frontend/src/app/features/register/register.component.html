@@ -1,0 +1,51 @@
+<div class="register-container">
+  <div class="header">
+    <fa-icon class="back-icon" [icon]="faChevronLeft" size="2x" (click)="goBack()" />
+    <p class="headline">Join the piixl Community.</p>
+    <p class="subline">Sign up to see what your friends are up to and share your own moments.</p>
+  </div>
+  <form class="register-form" [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+    <app-default-input
+      [control]="f.name"
+      placeholder="Name"
+      label="Name"
+      type="text"
+    ></app-default-input>
+    <app-default-input
+      [control]="f.username"
+      placeholder="Username"
+      label="Username"
+      type="text"
+    ></app-default-input>
+    <app-default-input
+      [control]="f.email"
+      placeholder="Email"
+      label="Email"
+      type="email"
+    ></app-default-input>
+    <app-default-input
+      [control]="f.birthday"
+      placeholder="Birthday"
+      label="Birthday"
+      type="date"
+    ></app-default-input>
+    <app-default-input
+      [control]="f.password"
+      placeholder="Password"
+      label="Password"
+      type="password"
+    ></app-default-input>
+    <app-default-input
+      [control]="f.confirmPassword"
+      placeholder="Confirm password"
+      label="Confirm password"
+      type="password"
+    ></app-default-input>
+    <app-default-button type="submit" title="Submit"></app-default-button>
+    <app-default-button
+      (buttonClicked)="goBack()"
+      variant="outline"
+      title="I already have an Account"
+    ></app-default-button>
+  </form>
+</div>

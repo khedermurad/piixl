@@ -1,0 +1,30 @@
+.register-container {
+  max-width: fit-content;
+  margin-inline: auto;
+}
+
+.header {
+  margin-top: 25px;
+}
+
+.headline {
+  font-weight: 600;
+  font-size: 18px;
+  margin-bottom: 5px;
+}
+
+.subline {
+  font-size: 16px;
+  margin-bottom: 8px;
+  margin-top: 0;
+}
+
+.back-icon {
+  cursor: pointer;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

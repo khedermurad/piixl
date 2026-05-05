@@ -1,0 +1,45 @@
+.login-container {
+  max-width: fit-content;
+  margin-inline: auto;
+}
+
+.login-header {
+  display: flex;
+  align-items: center;
+}
+
+.app-logo {
+  max-width: 200px;
+  width: 100%;
+  height: auto;
+}
+
+h1 {
+  font-size: 100px;
+  font-family: 'Inconsolata', monospace;
+  color: transparent;
+  -webkit-text-stroke: 1px black;
+  margin: 20px 0;
+  user-select: none;
+}
+
+strong {
+  background: var(--primary-gradient);
+
+  -webkit-background-clip: text;
+  background-clip: text;
+
+  color: transparent;
+  -webkit-text-stroke: 0;
+  cursor: pointer;
+}
+
+h2 {
+  margin-top: 0;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}

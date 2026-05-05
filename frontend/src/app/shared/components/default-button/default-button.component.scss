@@ -1,0 +1,39 @@
+@use 'sass:color';
+@use '../../../../styles/variables' as vars;
+
+button {
+  width: 100%;
+  font-size: 16px;
+  padding: 8px 10px;
+  border-radius: 20px;
+  border: 1.5px solid transparent;
+  outline: none;
+  background-color: vars.$primary-blue-hex;
+  color: white;
+  transition: all 0.2s ease;
+
+  &:hover {
+    cursor: pointer;
+    background-color: color.scale(vars.$primary-blue-hex, $lightness: 10%);
+  }
+
+  &:active {
+    background-color: color.scale(vars.$primary-blue-hex, $lightness: -10%);
+  }
+
+  &.is-outline {
+    background-color: transparent;
+    border-color: vars.$primary-blue-hex;
+    color: vars.$primary-blue-hex;
+
+    &:hover {
+      background-color: rgba(vars.$primary-blue-hex, 0.1); // Leichter Schimmer beim Hover
+      border-color: color.scale(vars.$primary-blue-hex, $lightness: 10%);
+      color: color.scale(vars.$primary-blue-hex, $lightness: 10%);
+    }
+
+    &:active {
+      background-color: rgba(vars.$primary-blue-hex, 0.2);
+    }
+  }
+}

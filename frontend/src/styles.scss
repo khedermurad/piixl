@@ -1,0 +1,19 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+$primary-pink-hex: #f95eb1;
+$primary-blue-hex: #6173ff;
+
+:root {
+  --primary-gradient: linear-gradient(90deg, #{$primary-pink-hex}, #{$primary-blue-hex});
+  --primary-pink: #{$primary-pink-hex};
+  --primary-blue: #{$primary-blue-hex};
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  color: rgb(57, 57, 57);
+}

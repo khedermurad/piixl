@@ -1,0 +1,27 @@
+<div class="input-container">
+  @if (label()) {
+    <label class="label" for="id()">{{ label() }}</label>
+  }
+  @if (control()) {
+    <input [formControl]="control()!" [id]="id()" [type]="type()" [placeholder]="placeholder()" />
+    @if (showError) {
+      @if (control()?.hasError('required')) {
+        <small>{{ label() }} is required</small>
+      }
+      @if (control()?.hasError('maxAge')) {
+        <small>You are not over 13 years old.</small>
+      }
+      @if (control()?.hasError('mismatch')) {
+        <small>Password doesnt match.</small>
+      }
+      @if (control()?.hasError('minlength')) {
+        <small>{{ label() }} is too short</small>
+      }
+      @if (control()?.hasError('email')) {
+        <small>{{ label() }} is invalid</small>
+      }
+    }
+  } @else {
+    <input [id]="id()" [type]="type()" [placeholder]="placeholder()" />
+  }
+</div>

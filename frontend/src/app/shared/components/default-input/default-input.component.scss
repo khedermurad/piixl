@@ -1,0 +1,40 @@
+.label {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+input {
+  width: 100%;
+  font-size: 16px;
+  padding: 8px 10px;
+  border-radius: 20px;
+  outline: none;
+  border: 1.5px solid #808080;
+  margin-top: 8px;
+}
+
+input:focus {
+  border-color: var(--primary-blue);
+}
+
+input[type='date'] {
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  color: rgb(57, 57, 57);
+}
+
+small {
+  color: red;
+}
+
+.input-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  small {
+    color: red;
+    display: block;
+    width: 100%;
+    word-wrap: break-word;
+  }
+}

@@ -1,0 +1,19 @@
+@use 'sass:color';
+@use '../../../../styles/variables' as vars;
+
+a {
+  display: block;
+  text-align: center;
+  width: 100%;
+  color: color.scale(vars.$primary-blue-hex, $lightness: -10%);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:active {
+    text-decoration: none;
+    color: color.scale(vars.$primary-blue-hex, $lightness: 10%);
+  }
+}

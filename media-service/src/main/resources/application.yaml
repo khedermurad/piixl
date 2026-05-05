@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: media-service
+  data:
+    mongodb:
+      uri: mongodb://root:root@localhost:8094/media_service_db?authSource=admin
+
+server:
+  port: 8082
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+  instance:
+    hostname: localhost
+    prefer-ip-address: false
+
+
+app:
+  upload:
+    dir: C:\Users\khede\MyProjects\piixl-project\uploads

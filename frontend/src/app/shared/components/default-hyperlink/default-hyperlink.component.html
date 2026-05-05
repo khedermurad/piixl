@@ -1,0 +1,5 @@
+@if (isExternal()) {
+  <a [href]="href()" target="_blank" rel="noopener">{{ title() }}</a>
+} @else {
+  <a [routerLink]="href()">{{ title() }}</a>
+}
