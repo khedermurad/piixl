@@ -1,10 +1,19 @@
 # Piixl
 
+
 Piixl is a high-performance, distributed system blueprint built with **Java 21**, **Spring Boot 3.4**, and **Spring Cloud**. 
 
 Designed as a technical demonstration rather than a consumer product, this repository implements complex backend patterns including **JWT security propagation**, **service discovery**, and **event-driven communication** in a containerized environment.
 
----
+## Purpose
+
+Piixl exists to demonstrate how to design and implement a production-style
+microservices architecture using Spring Boot and Spring Cloud.
+
+It is intended for:
+- Learning distributed systems patterns
+- Experimenting with service-to-service communication
+- Showcasing backend engineering skills
 
 ## Technologies Used
 The project leverages a modern tech stack focused on high performance and developer productivity:
@@ -12,12 +21,12 @@ The project leverages a modern tech stack focused on high performance and develo
 * **Backend:** Java 21 (LTS), Spring Boot 3.4+, Spring Cloud (Gateway & Eureka)
 * **Security:** Spring Security, JWT (JSON Web Tokens), BCrypt encryption
 * **Messaging:** RabbitMQ (Spring AMQP) for asynchronous event processing
-* **Databases:** * **PostgreSQL:** Relational storage for user identity and authentication
+* **Databases:** 
+    * **PostgreSQL:** Relational storage for user identity and authentication
     * **MongoDB:** Document storage for media and post metadata
 * **Frontend:** Angular (TypeScript)
 * **Containerization:** Docker & Docker Compose
 
----
 
 ## System Architecture
 The system is built on a **Microservices Architecture** utilizing the following patterns:
@@ -27,9 +36,9 @@ The system is built on a **Microservices Architecture** utilizing the following 
 * **Database per Service:** Auth data is strictly decoupled from application data, ensuring independent scalability and schema management.
 * **Token Propagation:** Authenticated user context is passed seamlessly from the gateway to downstream services via HTTP headers.
 
----
 
-## Development Workflow
+
+## Development Workflow and Local Installation
 
 ### Prerequisites
 * **Java JDK 21**
@@ -38,30 +47,16 @@ The system is built on a **Microservices Architecture** utilizing the following 
 
 ### Local Setup & Execution
 
-1.  Clone the Repo and Navigate to its Folder
-2. Start the Required Databases
-* **MongoDB for media-service**
+---
+1. **Clone the Repo**
 ``` bash
-cd media-service
-docker compose up -d
+git clone https://github.com/khedermurad/piixl
 ```
-This starts MongoDB on localhost:8094
-
-* **MongoDB for profile-service**
-``` bash
-cd profile-service
-docker compose up -d
-```
-This starts MongoDB on localhost:8095
+---
+2. **Start the Required Databases**
 
 * **PostgreSQL for auth-service**
-The app expects:
-    * host: localhost
-    * port: 5433
-    * database: auth_db
-    * user: postgres
-    * password: root
-If you do not already have PostgreSQL, use:
+    * Open a new terminal and run this (Terminal 1)
 ``` bash
 docker run -d --name piixl-postgres -p 5433:5432 \
     -e POSTGRES_DB=auth_db \
@@ -70,55 +65,94 @@ docker run -d --name piixl-postgres -p 5433:5432 \
 postgres:15
 ```
 
-3. **Start backend services in order**
-Open your piixl folder in separate terminals or use a multiplexer.
+* **MongoDB for media-service**
+    *  Open a new terminal and run this (Terminal 2)
+``` bash
+docker run -d --name piixl-mongodb -p 8094:27017 \
+    -e MONGO_INITDB_ROOT_USERNAME=root \
+    -e MONGO_INITDB_ROOT_PASSWORD=root \
+mongo
+```
+This starts MongoDB on localhost:8094
+
+* **MongoDB for profile-service**
+    * Open a new terminal and run this (Terminal 3)
+``` bash
+docker run -d --name profile-mongo -p 8095:27017 \
+    -e MONGO_INITDB_ROOT_USERNAME=root \
+    -e MONGO_INITDB_ROOT_PASSWORD=root \
+mongo
+```
+This starts MongoDB on localhost:8095
+
+* **RabbitMQ**
+    * Open a new terminal and run this (Terminal 4)
+``` bash
+docker run -d --name piixl-rabbitmq -p 5672:5672 -p 15672:15672 \
+    -e RABBITMQ_DEFAULT_USER=guest \
+    -e RABBITMQ_DEFAULT_PASS=guest \
+rabbitmq:3-management
+```
+This starts MongoDB on localhost:8095
+
+---
+3. **Verify Databases**
+Open a new terminal and run this (Terminal 5)
+``` bash
+docker ps -a
+```
+You should see: 
+ * piixl-postgres (port 5433)
+ * piixl-mongodb (port 8094)
+ * profile-mongo (port 8095)
+---
+4. **Start backend services in order**
     * **Discovery Server**
-    Run in a new terminal
+    Open a new terminal and run this (Terminal 6)
 
     ```bash
-    cd discovery-server
+    cd piixl/discovery-server
     ./mvnw spring-boot:run
     ```
     * **Auth Service**
-    Run in a new terminal
+    Open a new terminal and run this (Terminal 7)
 
     ```bash
-    cd auth-service
+    cd piixl/auth-service
     ./mvnw spring-boot:run
     ```
     * **Media Service**
-    Run in a new terminal
+    Open a new terminal and run this (Terminal 8)
 
     ```bash
-    cd media-service
+    cd piixl/media-service
     ./mvnw spring-boot:run
     ```
     * **Profile Service**
-    Run in a new terminal
+    Open a new terminal and run this (Terminal 9)
 
     ```bash
-    cd profile-service
+    cd piixl/profile-service
     ./mvnw spring-boot:run
     ```
     * **API Gateway**
-    Run in a new terminal
+    Open a new terminal and run this (Terminal 10)
 
     ```bash
-    cd api-gateway
+    cd piixl/api-gateway
     ./mvnw spring-boot:run
     ```
-
-
-### Running Services Individually
-If you need to debug a specific service without Docker:
-* **Step 1:** Start the `discovery-server` (Required for service mesh visibility).
-* **Step 2:** Boot the `api-gateway`.
-* **Step 3:** Run the target service:
-    ```bash
-    ./mvnw spring-boot:run -pl :service-name
-    ```
-
 ---
+5. **Start Frontend**
+Open a new terminal and run this (Terminal 11)
+    ```bash
+    cd piixl/frontend
+    npm install
+    npm start
+    ```
+---
+6. **Final Check**
+Once everything is running, you should be able to acess the links below in the Environment and Access section.
 
 ## Environment & Access
 
