@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
-import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
@@ -29,41 +29,47 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        logger.info("### FILTER AKTIV - Pfad: {}", exchange.getRequest().getURI().getPath());
         String path = exchange.getRequest().getURI().getPath();
 
-        if (path.contains("/api/auth/login") || path.contains("/api/auth/register")) {
-            return chain.filter(exchange);
+        ServerWebExchange mutatedExchange = exchange
+                .mutate().request(
+                        b -> b.headers(
+                                httpHeaders -> {
+                                    httpHeaders.remove("X-User-Id");
+                                    httpHeaders.remove("X-User-Name");
+                                }
+                        )
+                ).build();
+
+        if (path.startsWith("/api/auth/login") || path.startsWith("/api/auth/register")) {
+            return chain.filter(mutatedExchange);
         }
 
-        if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
+        HttpCookie cookie = mutatedExchange.getRequest().getCookies().getFirst("auth_token");
+
+        if (cookie == null || cookie.getValue().trim().isEmpty()){
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return exchange.getResponse().setComplete();
         }
 
-        String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+        String token = cookie.getValue();
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+
+        if (!jwtUtil.validateJwtToken(token)){
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return exchange.getResponse().setComplete();
         }
 
-        String jwt = parseJwt(authHeader);
-        if (!jwtUtil.validateJwtToken(jwt)){
-            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-            return exchange.getResponse().setComplete();
-        }
+        String userId = jwtUtil.getUserIdFromToken(token);
+        String username = jwtUtil.getUsernameFromToken(token);
 
-        String userId = jwtUtil.getUserIdFromToken(jwt);
-        String username = jwtUtil.getUsernameFromToken(jwt);
-
-        ServerWebExchange modifiedExchange = exchange.mutate()
+        ServerWebExchange modifiedExchange = mutatedExchange.mutate()
                 .request(builder -> builder
                         .header("X-User-Id", userId)
                         .header("X-User-Name", username))
                 .build();
 
-        logger.info("DEBUG: Gateway setzt Header für User: {}", userId);
+        logger.info("DEBUG: Gateway sets header for User: {}", userId);
         return chain.filter(modifiedExchange);
     }
 
@@ -71,12 +77,4 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     public int getOrder() {
         return -1;
     }
-
-    private String parseJwt(String authHeader) {
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7);
-        }
-        return null;
-    }
-
 }
