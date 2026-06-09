@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -43,19 +44,22 @@ public class AuthServiceTest {
     @Mock
     private JwtUtil jwtUtil;
 
+    @Mock
+    private RabbitTemplate rabbitTemplate;
+
     private AuthService authService;
 
     @BeforeEach
     void setUp(){
         authService = new AuthService(authRepository, passwordEncoder,
-                authenticationManager, jwtUtil);
+                authenticationManager, jwtUtil, rabbitTemplate);
     }
 
     @Test
     void shouldReturnRegisterResponse(){
         RegisterRequest registerRequest = validRegisterRequest();
 
-        when(authRepository.save(any(UserEntity.class))).thenReturn(null);
+        when(authRepository.save(any(UserEntity.class))).thenReturn(UserEntity.builder().id(12L).username("testuser").build());
 
         RegisterResponse registerResponse = authService.registerUser(registerRequest);
 

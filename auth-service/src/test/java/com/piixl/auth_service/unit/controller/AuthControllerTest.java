@@ -126,14 +126,20 @@ public class AuthControllerTest {
     void shouldReturnOkWhenLogin() throws Exception{
         LoginRequest loginRequest = new LoginRequest("test12345", "test12345");
         String requestString = objectMapper.writeValueAsString(loginRequest);
+        String fakeJwtToken = "jwt-token-test";
 
-        when(authService.login(any(LoginRequest.class))).thenReturn("jwt_token");
+        when(authService.login(any(LoginRequest.class))).thenReturn(fakeJwtToken);
 
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestString))
                 .andExpect(status().isOk())
-                .andExpect(content().string("jwt_token"));
+                .andExpect(content().string("Login successful"))
+                .andExpect(cookie().exists("auth_token"))
+                .andExpect(cookie().value("auth_token", fakeJwtToken))
+                .andExpect(cookie().httpOnly("auth_token", true))
+                .andExpect(cookie().secure("auth_token", true))
+                .andExpect(cookie().path("auth_token", "/"));
     }
 
     @Test
@@ -152,7 +158,8 @@ public class AuthControllerTest {
 
     static RegisterRequest validRegisterRequest(){
         return RegisterRequest.builder()
-                .username("test12")
+                .username("testuser12")
+                .profileName("T")
                 .email("test@test.com")
                 .password("Test12345#")
                 .passwordConfirm("Test12345#")

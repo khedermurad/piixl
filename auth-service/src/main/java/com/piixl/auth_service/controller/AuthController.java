@@ -4,7 +4,10 @@ import com.piixl.auth_service.model.LoginRequest;
 import com.piixl.auth_service.model.RegisterRequest;
 import com.piixl.auth_service.model.RegisterResponse;
 import com.piixl.auth_service.service.AuthService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,6 +24,9 @@ public class AuthController {
 
     private AuthService authService;
 
+    @Value("${jwt.expiration}")
+    private int jwtExpiration;
+
     @Autowired
     public AuthController(AuthService authService,
                           AuthenticationManager authenticationManager){
@@ -34,10 +40,17 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest){
-        String result = this.authService.login(loginRequest);
-        return ResponseEntity.ok(result);
+    public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response){
+        String jwtToken = this.authService.login(loginRequest);
+
+        Cookie cookie = new Cookie("auth_token", jwtToken);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(jwtExpiration);
+        response.addCookie(cookie);
+
+
+        return ResponseEntity.ok("Login successful");
     }
-
-
 }

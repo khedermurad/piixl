@@ -6,18 +6,21 @@ import com.piixl.auth_service.model.LoginRequest;
 import com.piixl.auth_service.model.RegisterRequest;
 import com.piixl.auth_service.model.UserEntity;
 import com.piixl.auth_service.repository.AuthRepository;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -44,6 +47,9 @@ public class AuthControllerIntegrationTest {
     private AuthRepository authRepository;
 
     private ObjectMapper objectMapper;
+
+    @MockitoBean
+    private RabbitTemplate rabbitTemplate;
 
     @BeforeEach
     void setUp(){
@@ -90,13 +96,13 @@ public class AuthControllerIntegrationTest {
     @Test
     void shouldReturnConflictWhenUserWithEqualUsernameExists() throws Exception{
         RegisterRequest registerRequest = validRegisterRequest();
-        registerRequest.setUsername("user1");
         String requestString = objectMapper.writeValueAsString(registerRequest);
 
         mockMvc.perform(post("/api/auth/register")
                         .content(requestString)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
+
 
         assertThat(authRepository.findByUsername(registerRequest.getUsername()))
                 .isPresent()
@@ -105,7 +111,8 @@ public class AuthControllerIntegrationTest {
                     assertThat(user.getUsername()).isEqualTo(registerRequest.getUsername());
                 });
 
-        registerRequest.setUsername("User1");
+        registerRequest.setUsername("testUser12");
+        registerRequest.setEmail("test2@test.com");
 
         requestString = objectMapper.writeValueAsString(registerRequest);
 
@@ -213,7 +220,7 @@ public class AuthControllerIntegrationTest {
                 .content(loginString)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().string(matchesPattern("^[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+/=]*$")));
+                .andExpect(content().string("Login successful"));
     }
 
     @Test
@@ -268,7 +275,7 @@ public class AuthControllerIntegrationTest {
                         .content(loginString)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().string(matchesPattern("^[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+/=]*$")));
+                .andExpect(content().string("Login successful"));
     }
 
     /* TODO fix this bug: when running this test remotely on pipeline
@@ -295,14 +302,17 @@ public class AuthControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        String validToken = mockMvc.perform(post("/api/auth/login")
+        MvcResult result = mockMvc.perform(post("/api/auth/login")
                         .content(loginString)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse().getContentAsString();
+                        .andExpect(cookie().exists("auth_token"))
+                                .andReturn();
+
+        Cookie cookie = result.getResponse().getCookie("auth_token");
 
 
         mockMvc.perform(get("/api/test/protected")
-                .header("Authorization", "Bearer "+ validToken))
+                .cookie(cookie))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Access granted"));
     }
@@ -311,7 +321,8 @@ public class AuthControllerIntegrationTest {
 
     static RegisterRequest validRegisterRequest(){
         return RegisterRequest.builder()
-                .username("test12")
+                .username("testuser12")
+                .profileName("T")
                 .email("test@test.com")
                 .password("Test12345#")
                 .passwordConfirm("Test12345#")

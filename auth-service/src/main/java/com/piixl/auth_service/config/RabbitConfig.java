@@ -16,10 +16,14 @@ public class RabbitConfig {
     public static final String QUEUE = "user.profile.create";
 
     @Bean
-    public TopicExchange exchange(){return new TopicExchange(EXCHANGE);}
+    public TopicExchange exchange(){
+        return new TopicExchange(EXCHANGE);
+    }
 
     @Bean
-    public Queue queue(){return new Queue(QUEUE);}
+    public Queue queue(){
+        return new Queue(QUEUE);
+    }
 
     @Bean
     public Binding binding(Queue queue, TopicExchange exchange) {
@@ -27,6 +31,8 @@ public class RabbitConfig {
     }
 
     @Bean
-    public MessageConverter jsonMessageConverter() { return new Jackson2JsonMessageConverter(); }
+    public MessageConverter jsonMessageConverter() {
+        return new Jackson2JsonMessageConverter();
+    }
 
 }
