@@ -54,7 +54,6 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 
         String token = cookie.getValue();
 
-
         if (!jwtUtil.validateJwtToken(token)){
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return exchange.getResponse().setComplete();

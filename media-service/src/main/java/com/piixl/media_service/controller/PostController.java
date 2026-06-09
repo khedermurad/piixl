@@ -35,7 +35,6 @@ public class PostController {
             @RequestParam("description") @NotBlank @Size(max = 500) String description,
             @RequestParam("file") @NotNull MultipartFile file){
 
-        logger.info("Media-Service empfängt ID: {}", userId);
         return postService.savePost(userId, username, description, file);
     }
 
