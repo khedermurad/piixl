@@ -41,7 +41,12 @@ export class RegisterComponent {
   registerForm = new FormGroup(
     {
       name: new FormControl<string>('', [Validators.required]),
-      username: new FormControl<string>('', [Validators.required, Validators.minLength(5)]),
+      username: new FormControl<string>('', [
+        Validators.required,
+        Validators.minLength(5),
+        Validators.maxLength(20),
+        Validators.pattern('^[A-Za-z]{5}.*'),
+      ]),
       email: new FormControl<string>('', [Validators.required, Validators.email]),
       birthday: new FormControl<string>('', [Validators.required, ageLimitValidator(13)]),
       password: new FormControl<string>('', [Validators.required]),
@@ -63,6 +68,8 @@ export class RegisterComponent {
       this.registerForm.markAllAsTouched();
       return;
     }
+    console.log('Valid data');
+
     // logic
     //this.goBack();
   }

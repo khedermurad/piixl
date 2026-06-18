@@ -17,8 +17,17 @@
       @if (control()?.hasError('minlength')) {
         <small>{{ label() }} is too short</small>
       }
+      @if (control()?.hasError('maxlength')) {
+        <small>{{ label() }} is too long</small>
+      }
       @if (control()?.hasError('email')) {
         <small>{{ label() }} is invalid</small>
+      }
+      @if (
+        control()?.hasError('pattern') &&
+        control()?.getError('pattern')?.requiredPattern === '^[A-Za-z]{5}.*$'
+      ) {
+        <small>{{ label() }} must start with 5 letters </small>
       }
     }
   } @else {
