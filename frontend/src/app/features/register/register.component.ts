@@ -1,16 +1,14 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import {
   AbstractControl,
   FormControl,
   FormGroup,
   FormsModule,
   ReactiveFormsModule,
-  ValidationErrors,
-  ValidatorFn,
   Validators,
 } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
+import { faChevronLeft, faL } from '@fortawesome/free-solid-svg-icons';
 import { DefaultInputComponent } from '../../shared/components/default-input/default-input.component';
 import { DefaultButtonComponent } from '../../shared/components/default-button/default-button.component';
 import {
@@ -18,6 +16,10 @@ import {
   passwordMatchValidator,
 } from '../../shared/validators/custom.validators';
 import { Location } from '@angular/common';
+import { AuthService } from '../../core/services/auth-service/auth.service';
+import { RegisterRequest } from '../../core/models/register-request';
+import { RegisterResponse } from '../../core/models/register-response';
+import { log } from 'console';
 
 @Component({
   selector: 'app-register',
@@ -33,8 +35,10 @@ import { Location } from '@angular/common';
 })
 export class RegisterComponent {
   faChevronLeft = faChevronLeft;
+  private isLoading = signal<boolean>(false);
+  private responseData = signal<RegisterResponse | null>(null);
 
-  isLoading = signal(false);
+  private authService = inject(AuthService);
 
   constructor(private location: Location) {}
 
@@ -45,7 +49,7 @@ export class RegisterComponent {
         Validators.required,
         Validators.minLength(5),
         Validators.maxLength(20),
-        Validators.pattern('^[A-Za-z]{5}.*'),
+        Validators.pattern('^[A-Za-z]{5}.*$'),
       ]),
       email: new FormControl<string>('', [Validators.required, Validators.email]),
       birthday: new FormControl<string>('', [Validators.required, ageLimitValidator(13)]),
@@ -68,9 +72,26 @@ export class RegisterComponent {
       this.registerForm.markAllAsTouched();
       return;
     }
-    console.log('Valid data');
+    this.isLoading.set(true);
+    const registerRequest: RegisterRequest = {
+      username: this.registerForm.get('username')?.value!,
+      profileName: this.registerForm.get('name')?.value!,
+      email: this.registerForm.get('email')?.value!,
+      password: this.registerForm.get('password')?.value!,
+      passwordConfirm: this.registerForm.get('passwordConfirm')?.value!,
+      dateOfBirth: this.registerForm.get('birthday')?.value!,
+      termsAccepted: true,
+    };
 
-    // logic
-    //this.goBack();
+    this.authService.register(registerRequest).subscribe({
+      next: (response) => {
+        this.responseData.set(response);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.log(err);
+        this.isLoading.set(false);
+      },
+    });
   }
 }
