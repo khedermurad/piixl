@@ -19,6 +19,7 @@ import { Location } from '@angular/common';
 import { AuthService } from '../../core/services/auth-service/auth.service';
 import { RegisterRequest } from '../../core/models/register-request';
 import { RegisterResponse } from '../../core/models/register-response';
+import { Router } from '@angular/router';
 import { log } from 'console';
 
 @Component({
@@ -39,6 +40,7 @@ export class RegisterComponent {
   private responseData = signal<RegisterResponse | null>(null);
 
   private authService = inject(AuthService);
+  private router = inject(Router);
 
   constructor(private location: Location) {}
 
@@ -64,6 +66,7 @@ export class RegisterComponent {
   }
 
   goBack() {
+    this.registerForm.reset();
     this.location.back();
   }
 
@@ -78,15 +81,19 @@ export class RegisterComponent {
       profileName: this.registerForm.get('name')?.value!,
       email: this.registerForm.get('email')?.value!,
       password: this.registerForm.get('password')?.value!,
-      passwordConfirm: this.registerForm.get('passwordConfirm')?.value!,
+      passwordConfirm: this.registerForm.get('confirmPassword')?.value!,
       dateOfBirth: this.registerForm.get('birthday')?.value!,
       termsAccepted: true,
     };
+
+    console.log(registerRequest);
 
     this.authService.register(registerRequest).subscribe({
       next: (response) => {
         this.responseData.set(response);
         this.isLoading.set(false);
+        this.registerForm.reset();
+        this.router.navigate(['/']);
       },
       error: (err) => {
         console.log(err);
