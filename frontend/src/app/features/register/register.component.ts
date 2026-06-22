@@ -1,6 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
 import {
-  AbstractControl,
   FormControl,
   FormGroup,
   FormsModule,
@@ -37,6 +36,7 @@ export class RegisterComponent {
   faChevronLeft = faChevronLeft;
   private isLoading = signal<boolean>(false);
   private responseData = signal<RegisterResponse | null>(null);
+  errorMessage = signal<string | null>(null);
 
   private authService = inject(AuthService);
   private router = inject(Router);
@@ -85,8 +85,6 @@ export class RegisterComponent {
       termsAccepted: true,
     };
 
-    console.log(registerRequest);
-
     this.authService.register(registerRequest).subscribe({
       next: (response) => {
         this.responseData.set(response);
@@ -95,7 +93,11 @@ export class RegisterComponent {
         this.router.navigate(['/login']);
       },
       error: (err) => {
-        console.log(err);
+        if (err.status === 409) {
+          this.errorMessage.set('Username or email already exists.');
+        } else {
+          this.errorMessage.set('An unexpected error occurred. Please try again.');
+        }
         this.isLoading.set(false);
       },
     });

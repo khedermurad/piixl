@@ -41,6 +41,7 @@
       label="Confirm password"
       type="password"
     ></app-default-input>
+    <small>{{ errorMessage() }}</small>
     <app-default-button type="submit" title="Submit"></app-default-button>
     <app-default-button
       (buttonClicked)="goBack()"
