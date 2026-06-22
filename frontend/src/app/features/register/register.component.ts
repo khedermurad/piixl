@@ -42,8 +42,6 @@ export class RegisterComponent {
   private location = inject(Location);
   private destroyRef = inject(DestroyRef);
 
-  constructor() {}
-
   registerForm = new FormGroup(
     {
       name: new FormControl<string>('', [Validators.required]),
@@ -66,43 +64,49 @@ export class RegisterComponent {
   }
 
   goBack() {
-    this.registerForm.reset();
-    this.location.back();
+    if (!this.isLoading()) {
+      this.registerForm.reset();
+      this.location.back();
+    }
+    return;
   }
 
   onSubmit() {
-    if (this.registerForm.invalid) {
-      this.registerForm.markAllAsTouched();
-      return;
-    }
-    this.isLoading.set(true);
-    const registerRequest: RegisterRequest = {
-      username: this.registerForm.get('username')!.value!,
-      profileName: this.registerForm.get('name')!.value!,
-      email: this.registerForm.get('email')!.value!,
-      password: this.registerForm.get('password')!.value!,
-      passwordConfirm: this.registerForm.get('confirmPassword')!.value!,
-      dateOfBirth: this.registerForm.get('birthday')!.value!,
-      termsAccepted: true,
-    };
+    if (!this.isLoading()) {
+      if (this.registerForm.invalid) {
+        this.registerForm.markAllAsTouched();
+        return;
+      }
+      this.isLoading.set(true);
+      const registerRequest: RegisterRequest = {
+        username: this.registerForm.get('username')!.value!,
+        profileName: this.registerForm.get('name')!.value!,
+        email: this.registerForm.get('email')!.value!,
+        password: this.registerForm.get('password')!.value!,
+        passwordConfirm: this.registerForm.get('confirmPassword')!.value!,
+        dateOfBirth: this.registerForm.get('birthday')!.value!,
+        termsAccepted: true,
+      };
 
-    this.authService
-      .register(registerRequest)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.isLoading.set(false);
-          this.registerForm.reset();
-          this.router.navigate(['/login']);
-        },
-        error: (err) => {
-          if (err.status === 409) {
-            this.errorMessage.set('Username or email already exists.');
-          } else {
-            this.errorMessage.set('An unexpected error occurred. Please try again.');
-          }
-          this.isLoading.set(false);
-        },
-      });
+      this.authService
+        .register(registerRequest)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: () => {
+            this.isLoading.set(false);
+            this.registerForm.reset();
+            this.router.navigate(['/login']);
+          },
+          error: (err) => {
+            if (err.status === 409) {
+              this.errorMessage.set('Username or email already exists.');
+            } else {
+              this.errorMessage.set('An unexpected error occurred. Please try again.');
+            }
+            this.isLoading.set(false);
+          },
+        });
+    }
+    return;
   }
 }

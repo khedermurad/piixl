@@ -11,6 +11,7 @@ export class DefaultButtonComponent {
   buttonClicked = output<void>();
   variant = input<'solid' | 'outline'>('solid');
   type = input<'button' | 'submit'>('button');
+  disabled = input<boolean>(false);
 
   public onClicked() {
     this.buttonClicked.emit();
