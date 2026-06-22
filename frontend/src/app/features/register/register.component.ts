@@ -1,12 +1,9 @@
-import { Component, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import {
-  AbstractControl,
   FormControl,
   FormGroup,
   FormsModule,
   ReactiveFormsModule,
-  ValidationErrors,
-  ValidatorFn,
   Validators,
 } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -18,6 +15,10 @@ import {
   passwordMatchValidator,
 } from '../../shared/validators/custom.validators';
 import { Location } from '@angular/common';
+import { AuthService } from '../../core/services/auth-service/auth.service';
+import { RegisterRequest } from '../../core/models/register-request';
+import { Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-register',
@@ -33,15 +34,23 @@ import { Location } from '@angular/common';
 })
 export class RegisterComponent {
   faChevronLeft = faChevronLeft;
+  isLoading = signal<boolean>(false);
+  errorMessage = signal<string | null>(null);
 
-  isLoading = signal(false);
-
-  constructor(private location: Location) {}
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private location = inject(Location);
+  private destroyRef = inject(DestroyRef);
 
   registerForm = new FormGroup(
     {
       name: new FormControl<string>('', [Validators.required]),
-      username: new FormControl<string>('', [Validators.required, Validators.minLength(5)]),
+      username: new FormControl<string>('', [
+        Validators.required,
+        Validators.minLength(5),
+        Validators.maxLength(20),
+        Validators.pattern('^[A-Za-z]{5}.*$'),
+      ]),
       email: new FormControl<string>('', [Validators.required, Validators.email]),
       birthday: new FormControl<string>('', [Validators.required, ageLimitValidator(13)]),
       password: new FormControl<string>('', [Validators.required]),
@@ -55,15 +64,49 @@ export class RegisterComponent {
   }
 
   goBack() {
-    this.location.back();
+    if (!this.isLoading()) {
+      this.registerForm.reset();
+      this.location.back();
+    }
+    return;
   }
 
   onSubmit() {
-    if (this.registerForm.invalid) {
-      this.registerForm.markAllAsTouched();
-      return;
+    if (!this.isLoading()) {
+      if (this.registerForm.invalid) {
+        this.registerForm.markAllAsTouched();
+        return;
+      }
+      this.isLoading.set(true);
+      const registerRequest: RegisterRequest = {
+        username: this.registerForm.get('username')!.value!,
+        profileName: this.registerForm.get('name')!.value!,
+        email: this.registerForm.get('email')!.value!,
+        password: this.registerForm.get('password')!.value!,
+        passwordConfirm: this.registerForm.get('confirmPassword')!.value!,
+        dateOfBirth: this.registerForm.get('birthday')!.value!,
+        termsAccepted: true,
+      };
+
+      this.authService
+        .register(registerRequest)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: () => {
+            this.isLoading.set(false);
+            this.registerForm.reset();
+            this.router.navigate(['/login']);
+          },
+          error: (err) => {
+            if (err.status === 409) {
+              this.errorMessage.set('Username or email already exists.');
+            } else {
+              this.errorMessage.set('An unexpected error occurred. Please try again.');
+            }
+            this.isLoading.set(false);
+          },
+        });
     }
-    // logic
-    //this.goBack();
+    return;
   }
 }

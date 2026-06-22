@@ -41,11 +41,15 @@
       label="Confirm password"
       type="password"
     ></app-default-input>
-    <app-default-button type="submit" title="Submit"></app-default-button>
+    @if (errorMessage()) {
+      <small>{{ errorMessage() }}</small>
+    }
+    <app-default-button type="submit" title="Submit" [disabled]="isLoading()"></app-default-button>
     <app-default-button
       (buttonClicked)="goBack()"
       variant="outline"
       title="I already have an Account"
+      [disabled]="isLoading()"
     ></app-default-button>
   </form>
 </div>

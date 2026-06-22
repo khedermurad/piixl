@@ -15,6 +15,18 @@ spring:
           uri: lb://MEDIA-SERVICE
           predicates:
               - Path=/api/media/**
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:4200"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
   profiles:
     active: dev
 
