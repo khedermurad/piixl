@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -7,7 +7,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faChevronLeft, faL } from '@fortawesome/free-solid-svg-icons';
+import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { DefaultInputComponent } from '../../shared/components/default-input/default-input.component';
 import { DefaultButtonComponent } from '../../shared/components/default-button/default-button.component';
 import {
@@ -17,8 +17,8 @@ import {
 import { Location } from '@angular/common';
 import { AuthService } from '../../core/services/auth-service/auth.service';
 import { RegisterRequest } from '../../core/models/register-request';
-import { RegisterResponse } from '../../core/models/register-response';
 import { Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-register',
@@ -34,14 +34,15 @@ import { Router } from '@angular/router';
 })
 export class RegisterComponent {
   faChevronLeft = faChevronLeft;
-  private isLoading = signal<boolean>(false);
-  private responseData = signal<RegisterResponse | null>(null);
+  isLoading = signal<boolean>(false);
   errorMessage = signal<string | null>(null);
 
   private authService = inject(AuthService);
   private router = inject(Router);
+  private location = inject(Location);
+  private destroyRef = inject(DestroyRef);
 
-  constructor(private location: Location) {}
+  constructor() {}
 
   registerForm = new FormGroup(
     {
@@ -76,30 +77,32 @@ export class RegisterComponent {
     }
     this.isLoading.set(true);
     const registerRequest: RegisterRequest = {
-      username: this.registerForm.get('username')?.value!,
-      profileName: this.registerForm.get('name')?.value!,
-      email: this.registerForm.get('email')?.value!,
-      password: this.registerForm.get('password')?.value!,
-      passwordConfirm: this.registerForm.get('confirmPassword')?.value!,
-      dateOfBirth: this.registerForm.get('birthday')?.value!,
+      username: this.registerForm.get('username')!.value!,
+      profileName: this.registerForm.get('name')!.value!,
+      email: this.registerForm.get('email')!.value!,
+      password: this.registerForm.get('password')!.value!,
+      passwordConfirm: this.registerForm.get('confirmPassword')!.value!,
+      dateOfBirth: this.registerForm.get('birthday')!.value!,
       termsAccepted: true,
     };
 
-    this.authService.register(registerRequest).subscribe({
-      next: (response) => {
-        this.responseData.set(response);
-        this.isLoading.set(false);
-        this.registerForm.reset();
-        this.router.navigate(['/login']);
-      },
-      error: (err) => {
-        if (err.status === 409) {
-          this.errorMessage.set('Username or email already exists.');
-        } else {
-          this.errorMessage.set('An unexpected error occurred. Please try again.');
-        }
-        this.isLoading.set(false);
-      },
-    });
+    this.authService
+      .register(registerRequest)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.isLoading.set(false);
+          this.registerForm.reset();
+          this.router.navigate(['/login']);
+        },
+        error: (err) => {
+          if (err.status === 409) {
+            this.errorMessage.set('Username or email already exists.');
+          } else {
+            this.errorMessage.set('An unexpected error occurred. Please try again.');
+          }
+          this.isLoading.set(false);
+        },
+      });
   }
 }
