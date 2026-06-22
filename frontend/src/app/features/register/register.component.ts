@@ -20,7 +20,6 @@ import { AuthService } from '../../core/services/auth-service/auth.service';
 import { RegisterRequest } from '../../core/models/register-request';
 import { RegisterResponse } from '../../core/models/register-response';
 import { Router } from '@angular/router';
-import { log } from 'console';
 
 @Component({
   selector: 'app-register',
@@ -93,7 +92,7 @@ export class RegisterComponent {
         this.responseData.set(response);
         this.isLoading.set(false);
         this.registerForm.reset();
-        this.router.navigate(['/']);
+        this.router.navigate(['/login']);
       },
       error: (err) => {
         console.log(err);
