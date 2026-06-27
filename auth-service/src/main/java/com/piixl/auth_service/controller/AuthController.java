@@ -14,6 +14,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -57,6 +59,25 @@ public class AuthController {
     }
 
 
+    @GetMapping("/me")
+    public ResponseEntity<Map<String, String>> me(@RequestHeader("X-User-Name") String username){
+        return ResponseEntity.ok(Map.of("username", username));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(){
+        ResponseCookie cookie = ResponseCookie.from("auth_token", "").
+                httpOnly(true).
+                secure(true).
+                path("/").
+                maxAge(0).
+                sameSite("Lax").
+                build();
+
+        return ResponseEntity.ok().
+                header(HttpHeaders.SET_COOKIE, cookie.toString()).
+                build();
+    }
 
 
 
