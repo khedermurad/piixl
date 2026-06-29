@@ -1,7 +1,6 @@
 package com.piixl.auth_service.unit.controller;
 
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.piixl.auth_service.controller.AuthController;
@@ -16,7 +15,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.web.servlet.MockMvc;
@@ -26,6 +24,7 @@ import java.time.LocalDate;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -139,7 +138,8 @@ public class AuthControllerTest {
                 .andExpect(cookie().value("auth_token", fakeJwtToken))
                 .andExpect(cookie().httpOnly("auth_token", true))
                 .andExpect(cookie().secure("auth_token", true))
-                .andExpect(cookie().path("auth_token", "/"));
+                .andExpect(cookie().path("auth_token", "/"))
+                .andExpect(cookie().sameSite("auth_token", "Lax"));
     }
 
     @Test
@@ -153,6 +153,31 @@ public class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestString))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldReturnOkAndUsernameWhenRequestMe() throws Exception {
+        String username = "testUser01";
+
+        mockMvc.perform(get("/api/auth/me")
+                        .header("X-User-Name", username)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.username").value(username))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldReturnOkAndCookieWithAnEmptyJWTAndMaxAgeOfZero() throws Exception {
+        mockMvc.perform(post("/api/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(cookie().exists("auth_token"))
+                .andExpect(cookie().value("auth_token", ""))
+                .andExpect(cookie().httpOnly("auth_token", true))
+                .andExpect(cookie().secure("auth_token", true))
+                .andExpect(cookie().path("auth_token", "/"))
+                .andExpect(cookie().maxAge("auth_token", 0))
+                .andExpect(cookie().sameSite("auth_token", "Lax"));
     }
 
 
