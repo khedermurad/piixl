@@ -28,7 +28,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -315,6 +314,153 @@ public class AuthControllerIntegrationTest {
                 .cookie(cookie))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Access granted"));
+    }
+
+    @Test
+    void shouldReturnOkAndUsernameWhenRequestMe() throws Exception {
+        RegisterRequest registerRequest = validRegisterRequest();
+        String registerString = objectMapper.writeValueAsString(registerRequest);
+
+        LoginRequest loginRequest = new LoginRequest(registerRequest.getUsername(),
+                registerRequest.getPassword());
+        String loginString = objectMapper.writeValueAsString(loginRequest);
+
+        mockMvc.perform(post("/api/auth/register")
+                        .content(registerString)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        MvcResult mvcResult =  mockMvc.perform(post("/api/auth/login")
+                        .content(loginString)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Login successful")).andReturn();
+
+        Cookie cookie = mvcResult.getResponse().getCookie("auth_token");
+
+        mockMvc.perform(get("/api/auth/me")
+                        .cookie(cookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-User-Name", loginRequest.getUsername()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value(loginRequest.getUsername()));
+    }
+
+    @Test
+    void shouldReturnUnauthorizedWhenRequestMeWithoutLoginBefore() throws Exception {
+        String username = "TestUser01";
+
+        mockMvc.perform(get("/api/auth/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-User-Name", username))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldReturnOkAndCookieWithAnEmptyJWTAndMaxAgeOfZeroWhenLogout() throws Exception {
+        RegisterRequest registerRequest = validRegisterRequest();
+        String registerString = objectMapper.writeValueAsString(registerRequest);
+
+        LoginRequest loginRequest = new LoginRequest(registerRequest.getUsername(),
+                registerRequest.getPassword());
+        String loginString = objectMapper.writeValueAsString(loginRequest);
+
+        mockMvc.perform(post("/api/auth/register")
+                        .content(registerString)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        MvcResult mvcResult =  mockMvc.perform(post("/api/auth/login")
+                        .content(loginString)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Login successful")).andReturn();
+
+        Cookie cookie = mvcResult.getResponse().getCookie("auth_token");
+
+        MvcResult logoutResult = mockMvc.perform(post("/api/auth/logout")
+                        .cookie(cookie)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        Cookie logoutCookie = logoutResult.getResponse().getCookie("auth_token");
+
+        assertThat(logoutCookie).isNotNull();
+        assertThat(logoutCookie.getName()).isEqualTo("auth_token");
+        assertThat(logoutCookie.getValue()).isEqualTo("");
+        assertThat(logoutCookie.isHttpOnly()).isTrue();
+        assertThat(logoutCookie.getSecure()).isTrue();
+        assertThat(logoutCookie.getPath()).isEqualTo("/");
+        assertThat(logoutCookie.getMaxAge()).isEqualTo(0);
+        assertThat(logoutCookie.getAttribute("SameSite")).isEqualTo("Lax");
+    }
+
+
+    @Test
+    void shouldReturnUnauthorizedWhenLogoutAfterLogout() throws Exception {
+        RegisterRequest registerRequest = validRegisterRequest();
+        String registerString = objectMapper.writeValueAsString(registerRequest);
+
+        LoginRequest loginRequest = new LoginRequest(registerRequest.getUsername(),
+                registerRequest.getPassword());
+        String loginString = objectMapper.writeValueAsString(loginRequest);
+
+        mockMvc.perform(post("/api/auth/register")
+                        .content(registerString)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        MvcResult mvcResult =  mockMvc.perform(post("/api/auth/login")
+                        .content(loginString)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Login successful")).andReturn();
+
+        Cookie cookie = mvcResult.getResponse().getCookie("auth_token");
+
+        MvcResult logoutResult = mockMvc.perform(post("/api/auth/logout")
+                        .cookie(cookie)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        Cookie logoutCookie = logoutResult.getResponse().getCookie("auth_token");
+
+        mockMvc.perform(post("/api/auth/logout")
+                        .cookie(logoutCookie)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldReturnUnauthorizedWhenRequestMeAfterLogout() throws Exception {
+        RegisterRequest registerRequest = validRegisterRequest();
+        String registerString = objectMapper.writeValueAsString(registerRequest);
+
+        LoginRequest loginRequest = new LoginRequest(registerRequest.getUsername(),
+                registerRequest.getPassword());
+        String loginString = objectMapper.writeValueAsString(loginRequest);
+
+        mockMvc.perform(post("/api/auth/register")
+                        .content(registerString)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        MvcResult mvcResult =  mockMvc.perform(post("/api/auth/login")
+                        .content(loginString)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Login successful")).andReturn();
+
+        Cookie cookie = mvcResult.getResponse().getCookie("auth_token");
+
+        MvcResult logoutResult = mockMvc.perform(post("/api/auth/logout")
+                        .cookie(cookie)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        Cookie logoutCookie = logoutResult.getResponse().getCookie("auth_token");
+
+        mockMvc.perform(get("/api/auth/me")
+                        .cookie(logoutCookie)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
     }
 
 
