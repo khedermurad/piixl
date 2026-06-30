@@ -50,19 +50,19 @@ public class AuthController {
 
 
         ResponseCookie cookie = ResponseCookie.
-                from("auth_token", jwtToken).
-                httpOnly(true).
-                secure(true).
-                path("/").
-                maxAge(jwtExpiration).
-                sameSite("Lax").
-                build();
+                from("auth_token", jwtToken)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(jwtExpiration)
+                .sameSite("Lax")
+                .build();
 
 
 
         return ResponseEntity.ok().
-                header(HttpHeaders.SET_COOKIE, cookie.toString()).
-                body("Login successful");
+                header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body("Login successful");
     }
 
 
@@ -73,17 +73,17 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(){
-        ResponseCookie cookie = ResponseCookie.from("auth_token", "").
-                httpOnly(true).
-                secure(true).
-                path("/").
-                maxAge(0).
-                sameSite("Lax").
-                build();
+        ResponseCookie cookie = ResponseCookie.from("auth_token", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
 
         return ResponseEntity.ok().
-                header(HttpHeaders.SET_COOKIE, cookie.toString()).
-                build();
+                header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .build();
     }
 
 
