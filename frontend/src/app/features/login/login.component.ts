@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { DefaultInputComponent } from '../../shared/components/default-input/default-input.component';
 import { DefaultButtonComponent } from '../../shared/components/default-button/default-button.component';
 import { DefaultHyperlinkComponent } from '../../shared/components/default-hyperlink/default-hyperlink.component';
@@ -12,6 +12,8 @@ import {
   ɵInternalFormsSharedModule,
 } from '@angular/forms';
 import { passwordMatchValidator } from '../../shared/validators/custom.validators';
+import { AuthService } from '../../core/services/auth-service/auth.service';
+import { LoginRequest } from '../../core/models/auth/login-request';
 
 @Component({
   selector: 'app-login',
@@ -27,17 +29,52 @@ import { passwordMatchValidator } from '../../shared/validators/custom.validator
   styleUrl: './login.component.scss',
 })
 export class LoginComponent {
-  constructor(private router: Router) {}
+  isLoading = signal<boolean>(false);
+  errorMessage = signal<string | null>(null);
+
+  private router = inject(Router);
+  private authService = inject(AuthService);
 
   loginForm = new FormGroup(
     {
-      email: new FormControl<string>('', [Validators.required, Validators.email]),
+      username: new FormControl<string>('', [Validators.required]),
       password: new FormControl<string>('', Validators.required),
     },
     { validators: passwordMatchValidator },
   );
 
-  public onSubmit() {}
+  public onSubmit() {
+    if (!this.isLoading()) {
+      if (this.loginForm.invalid) {
+        this.loginForm.markAllAsTouched;
+        return;
+      } else {
+        this.isLoading.set(true);
+        const loginRequest: LoginRequest = {
+          username: this.loginForm.get('username')!.value!,
+          password: this.loginForm.get('password')!.value!,
+        };
+
+        this.authService.login(loginRequest).subscribe({
+          next: () => {
+            this.isLoading.set(false);
+            this.loginForm.reset();
+            this.router.navigate(['/dashboard']);
+          },
+          error: (err) => {
+            if (err.status === 500) {
+              this.errorMessage.set('Username or password is invalid');
+            } else {
+              console.log(err);
+
+              this.errorMessage.set('An unexpected error occurred. Please try again.');
+            }
+            this.isLoading.set(false);
+          },
+        });
+      }
+    }
+  }
 
   public onCreateNewAccount() {
     this.router.navigate(['/register']);
