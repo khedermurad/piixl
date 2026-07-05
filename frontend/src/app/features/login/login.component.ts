@@ -57,9 +57,11 @@ export class LoginComponent {
 
         this.authService.login(loginRequest).subscribe({
           next: () => {
-            this.isLoading.set(false);
-            this.loginForm.reset();
-            this.router.navigate(['/dashboard']);
+            this.authService.checkInitialAuth().subscribe(() => {
+              this.isLoading.set(false);
+              this.loginForm.reset();
+              this.router.navigate(['/dashboard']);
+            });
           },
           error: (err) => {
             if (err.status === 500) {

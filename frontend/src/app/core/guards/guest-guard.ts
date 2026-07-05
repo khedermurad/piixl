@@ -1,14 +1,14 @@
+import { isPlatformBrowser } from '@angular/common';
 import { inject, PLATFORM_ID } from '@angular/core';
-import { Router, CanActivateFn } from '@angular/router';
+import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth-service/auth.service';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
-import { isPlatformBrowser } from '@angular/common';
 
-export const authGuard: CanActivateFn = (route, state) => {
-  const router = inject(Router);
-  const authService = inject(AuthService);
+export const guestGuard: CanActivateFn = (route, state) => {
   const platformId = inject(PLATFORM_ID);
+  const authService = inject(AuthService);
+  const router = inject(Router);
 
   if (!isPlatformBrowser(platformId)) {
     return true;
@@ -18,19 +18,19 @@ export const authGuard: CanActivateFn = (route, state) => {
     return toObservable(authService.isLoading).pipe(
       filter((loading) => !loading),
       take(1),
-      map(() => checkAccess(authService, router)),
+      map(() => checkGuestAccess(authService, router)),
     );
   }
 
-  return checkAccess(authService, router);
+  return checkGuestAccess(authService, router);
 };
 
-function checkAccess(
+function checkGuestAccess(
   authService: AuthService,
   router: Router,
 ): boolean | ReturnType<Router['createUrlTree']> {
   if (authService.currentUser()) {
-    return true;
+    return router.createUrlTree(['/dashboard']);
   }
-  return router.createUrlTree(['/login']);
+  return true;
 }
