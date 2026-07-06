@@ -46,7 +46,7 @@ export class LoginComponent {
   public onSubmit() {
     if (!this.isLoading()) {
       if (this.loginForm.invalid) {
-        this.loginForm.markAllAsTouched;
+        this.loginForm.markAllAsTouched();
         return;
       } else {
         this.isLoading.set(true);
