@@ -162,7 +162,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenUserCannotBeFound(){
+    void shouldThrowBadCredentialsExceptionWhenUserNotFoundAfterAuthentication(){
         LoginRequest loginRequest = new LoginRequest("user", "password");
         List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
         Authentication mockAuth = new UsernamePasswordAuthenticationToken("user", "password", authorities);
