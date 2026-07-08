@@ -155,6 +155,8 @@ public class AuthControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
+
+
     @Test
     void shouldReturnOkAndUsernameWhenRequestMe() throws Exception {
         String username = "testUser01";
@@ -179,6 +181,7 @@ public class AuthControllerTest {
                 .andExpect(cookie().maxAge("auth_token", 0))
                 .andExpect(cookie().sameSite("auth_token", "Lax"));
     }
+
 
 
     static RegisterRequest validRegisterRequest(){
