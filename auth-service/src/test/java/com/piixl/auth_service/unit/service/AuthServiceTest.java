@@ -24,6 +24,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -155,6 +156,19 @@ public class AuthServiceTest {
 
         when(authenticationManager.authenticate(any(Authentication.class)))
                 .thenThrow(new BadCredentialsException("Invalid username or password"));
+
+        assertThrows(BadCredentialsException.class, () -> authService.login(loginRequest));
+        verify(jwtUtil, never()).generateToken(anyString(), any(Role.class), eq(12L));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUserCannotBeFound(){
+        LoginRequest loginRequest = new LoginRequest("user", "password");
+        List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+        Authentication mockAuth = new UsernamePasswordAuthenticationToken("user", "password", authorities);
+
+        when(authenticationManager.authenticate(any(Authentication.class))).thenReturn(mockAuth);
+        when(authRepository.findByUsername(mockAuth.getName())).thenReturn(Optional.empty());
 
         assertThrows(BadCredentialsException.class, () -> authService.login(loginRequest));
         verify(jwtUtil, never()).generateToken(anyString(), any(Role.class), eq(12L));

@@ -15,6 +15,7 @@ import com.piixl.auth_service.security.JwtUtil;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -93,7 +94,7 @@ public class AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         UserEntity user = authRepository.findByUsername(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User disappeared?"));
+                .orElseThrow(() -> new BadCredentialsException("Username or password is incorrect"));
 
         String roleName = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
