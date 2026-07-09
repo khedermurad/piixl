@@ -5,12 +5,13 @@ import { RegisterResponse } from '../../models/auth/register-response';
 import { RegisterRequest } from '../../models/auth/register-request';
 import { LoginRequest } from '../../models/auth/login-request';
 import { isPlatformBrowser } from '@angular/common';
+import { environment } from '../../../../environments/environment.development';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private baseUrl = 'http://localhost:8080/api/auth';
+  private apiUrl = environment.backendUrl;
   private http = inject(HttpClient);
 
   currentUser = signal<string | null>(null);
@@ -23,7 +24,7 @@ export class AuthService {
       return of(false);
     }
 
-    return this.http.get<string>(this.baseUrl + '/me').pipe(
+    return this.http.get<string>(this.apiUrl + '/me').pipe(
       map((user) => {
         this.currentUser.set(user);
         this.isLoading.set(false);
@@ -38,11 +39,11 @@ export class AuthService {
   }
 
   register(registerRequest: RegisterRequest): Observable<RegisterResponse> {
-    return this.http.post<RegisterResponse>(this.baseUrl + '/register', registerRequest);
+    return this.http.post<RegisterResponse>(this.apiUrl + '/register', registerRequest);
   }
 
   login(loginRequest: LoginRequest): Observable<string> {
-    return this.http.post(this.baseUrl + '/login', loginRequest, {
+    return this.http.post(this.apiUrl + '/login', loginRequest, {
       responseType: 'text',
     });
   }

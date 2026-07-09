@@ -35,13 +35,10 @@ export class LoginComponent {
   private router = inject(Router);
   private authService = inject(AuthService);
 
-  loginForm = new FormGroup(
-    {
-      username: new FormControl<string>('', [Validators.required]),
-      password: new FormControl<string>('', Validators.required),
-    },
-    { validators: passwordMatchValidator },
-  );
+  loginForm = new FormGroup({
+    username: new FormControl<string>('', [Validators.required]),
+    password: new FormControl<string>('', Validators.required),
+  });
 
   public onSubmit() {
     if (!this.isLoading()) {
@@ -64,7 +61,7 @@ export class LoginComponent {
             });
           },
           error: (err) => {
-            if (err.status === 500) {
+            if (err.status === 401) {
               this.errorMessage.set('Username or password is invalid');
             } else {
               console.log(err);
