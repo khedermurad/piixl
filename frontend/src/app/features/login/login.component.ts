@@ -14,6 +14,7 @@ import {
 import { passwordMatchValidator } from '../../shared/validators/custom.validators';
 import { AuthService } from '../../core/services/auth-service/auth.service';
 import { LoginRequest } from '../../core/models/auth/login-request';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -52,25 +53,26 @@ export class LoginComponent {
           password: this.loginForm.get('password')!.value!,
         };
 
-        this.authService.login(loginRequest).subscribe({
-          next: () => {
-            this.authService.checkInitialAuth().subscribe(() => {
-              this.isLoading.set(false);
-              this.loginForm.reset();
-              this.router.navigate(['/dashboard']);
-            });
-          },
-          error: (err) => {
-            if (err.status === 401) {
-              this.errorMessage.set('Username or password is invalid');
-            } else {
-              console.log(err);
+        this.authService
+          .login(loginRequest)
+          .pipe(finalize(() => this.isLoading.set(false)))
+          .subscribe({
+            next: () => {
+              this.authService.checkInitialAuth().subscribe(() => {
+                this.loginForm.reset();
+                this.router.navigate(['/dashboard']);
+              });
+            },
+            error: (err) => {
+              if (err.status === 401) {
+                this.errorMessage.set('Username or password is invalid');
+              } else {
+                console.log(err);
 
-              this.errorMessage.set('An unexpected error occurred. Please try again.');
-            }
-            this.isLoading.set(false);
-          },
-        });
+                this.errorMessage.set('An unexpected error occurred. Please try again.');
+              }
+            },
+          });
       }
     }
   }
