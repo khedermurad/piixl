@@ -16,7 +16,7 @@ import {
 } from '../../shared/validators/custom.validators';
 import { Location } from '@angular/common';
 import { AuthService } from '../../core/services/auth-service/auth.service';
-import { RegisterRequest } from '../../core/models/register-request';
+import { RegisterRequest } from '../../core/models/auth/register-request';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 

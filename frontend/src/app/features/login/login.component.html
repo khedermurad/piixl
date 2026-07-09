@@ -5,10 +5,10 @@
   <h2>Sign up for Piixl</h2>
   <form class="login-form" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
     <app-default-input
-      label="Email"
-      [control]="loginForm.controls.email"
-      placeholder="Email"
-      type="email"
+      label="Username"
+      [control]="loginForm.controls.username"
+      placeholder="Username"
+      type="text"
     ></app-default-input>
     <app-default-input
       label="Password"
@@ -16,7 +16,10 @@
       placeholder="Password"
       type="password"
     ></app-default-input>
-    <app-default-button type="submit" title="Log in"></app-default-button>
+    @if (errorMessage()) {
+      <small>{{ errorMessage() }}</small>
+    }
+    <app-default-button type="submit" title="Log in" [disabled]="isLoading()"></app-default-button>
     <app-default-button
       (buttonClicked)="onCreateNewAccount()"
       variant="outline"

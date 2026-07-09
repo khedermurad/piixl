@@ -12,9 +12,12 @@ import com.piixl.auth_service.model.UserEvent;
 import com.piixl.auth_service.model.LoginRequest;
 import com.piixl.auth_service.repository.AuthRepository;
 import com.piixl.auth_service.security.JwtUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -31,6 +34,8 @@ public class AuthService {
     private AuthenticationManager authenticationManager;
     private JwtUtil jwtUtil;
     private RabbitTemplate rabbitTemplate;
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
 
     @Autowired
@@ -93,7 +98,10 @@ public class AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         UserEntity user = authRepository.findByUsername(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User disappeared?"));
+                .orElseThrow(() -> {
+                    logger.warn("Authenticated user {} not found in repository", authentication.getName());
+                    return new BadCredentialsException("Username or password is incorrect");
+                });
 
         String roleName = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
