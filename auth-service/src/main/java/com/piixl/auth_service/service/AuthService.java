@@ -11,7 +11,6 @@ import com.piixl.auth_service.model.UserEntity;
 import com.piixl.auth_service.model.UserEvent;
 import com.piixl.auth_service.model.LoginRequest;
 import com.piixl.auth_service.repository.AuthRepository;
-import com.piixl.auth_service.security.AuthTokenFilter;
 import com.piixl.auth_service.security.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

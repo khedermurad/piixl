@@ -5,7 +5,7 @@ import { RegisterResponse } from '../../models/auth/register-response';
 import { RegisterRequest } from '../../models/auth/register-request';
 import { LoginRequest } from '../../models/auth/login-request';
 import { isPlatformBrowser } from '@angular/common';
-import { environment } from '../../../../environments/environment.development';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',

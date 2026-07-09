@@ -17,7 +17,7 @@ import {
 } from '@angular/common/http';
 import { AuthService } from './core/services/auth-service/auth.service';
 import { firstValueFrom } from 'rxjs';
-import { environment } from '../environments/environment.development';
+import { environment } from '../environments/environment';
 
 function credentialsInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn) {
   let clonedUserReq = req;
