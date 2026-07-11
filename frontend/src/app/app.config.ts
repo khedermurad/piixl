@@ -22,7 +22,7 @@ import { environment } from '../environments/environment';
 function credentialsInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn) {
   let clonedUserReq = req;
   const backendUrlObj = new URL(environment.backendUrl);
-  const requestUrlObj = new URL(req.url, window.location.origin);
+  const requestUrlObj = new URL(req.url);
 
   if (backendUrlObj.origin === requestUrlObj.origin) {
     clonedUserReq = req.clone({ withCredentials: true });
