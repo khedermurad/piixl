@@ -1,0 +1,135 @@
+name: Centralized CI
+run-name: Run Centralized CI by ${{ github.actor }}
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      api_gateway: ${{ steps.filter.outputs.api_gateway }}
+      auth_service: ${{ steps.filter.outputs.auth_service }}
+      discovery_server: ${{ steps.filter.outputs.discovery_server }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      media_service: ${{ steps.filter.outputs.media_service }}
+      profile_service: ${{ steps.filter.outputs.profile_service }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            api_gateway:
+              - 'api-gateway/**'
+            auth_service:
+              - 'auth-service/**'
+            discovery_server:
+              - 'discovery-server/**'
+            frontend:
+              - 'frontend/**'
+            media_service:
+              - 'media-service/**'
+            profile_service:
+              - 'profile-service/**'
+
+  auth-service:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.auth_service == 'true' }}
+    runs-on: ubuntu-latest
+    name: Auth Service CI
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+          cache-dependency-path: 'auth-service/pom.xml'
+
+      - name: Build with Maven
+        run: mvn -B clean install -DskipTests --file auth-service/pom.xml
+
+      - name: Run Tests
+        run: mvn -B test --file auth-service/pom.xml
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-auth-service
+          path: auth-service/target/surefire-reports/
+
+  frontend:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.frontend == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Dummy log - Frontend changes detected. Future npm tests will run here."
+
+  api-gateway:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.api_gateway == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Dummy log - API Gateway changes detected."
+
+  discovery-server:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.discovery_server == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Dummy log - Discovery Server changes detected."
+
+  media-service:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.media_service == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Dummy log - Media Service changes detected."
+
+  profile-service:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.profile_service == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Dummy log - Profile Service changes detected."
+
+  build-and-test:
+    name: Build & Test
+    needs:
+      [
+        detect-changes,
+        auth-service,
+        frontend,
+        api-gateway,
+        discovery-server,
+        media-service,
+        profile-service,
+      ]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check overall pipeline status
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        run: |
+          echo "CI Error: One or more changed services failed their validation!"
+          exit 1
+      - name: Success
+        run: echo "All changed services successfully validated or skipped!"
