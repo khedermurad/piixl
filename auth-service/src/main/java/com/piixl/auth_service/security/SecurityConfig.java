@@ -13,7 +13,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 
 @Configuration
@@ -22,16 +21,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private AuthUserDetailsService userDetailsService;
-    private AuthEntryPointJwt unauthorizedHandler;
-    private AuthTokenFilter authenticationJwtTokenFilter;
 
     @Autowired
-    public SecurityConfig(AuthUserDetailsService userDetailsService,
-                          AuthEntryPointJwt unauthorizedHandler,
-                          AuthTokenFilter authenticationJwtTokenFilter){
+    public SecurityConfig(AuthUserDetailsService userDetailsService){
         this.userDetailsService = userDetailsService;
-        this.unauthorizedHandler = unauthorizedHandler;
-        this.authenticationJwtTokenFilter = authenticationJwtTokenFilter;
     }
 
 
@@ -39,21 +32,11 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
         http.
                 csrf(AbstractHttpConfigurer::disable).
-                exceptionHandling(exceptionHandling
-                        -> exceptionHandling.authenticationEntryPoint(unauthorizedHandler)).
                 sessionManagement(sessionManagement ->
                         sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).
                 authorizeHttpRequests((authorize) ->
-                authorize.requestMatchers("/api/public/**").permitAll()
-                        .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
-                        .requestMatchers(
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html"
-                        ).permitAll()
-                        .anyRequest().authenticated())
+                authorize.anyRequest().permitAll())
                 ;
-        http.addFilterBefore(authenticationJwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
