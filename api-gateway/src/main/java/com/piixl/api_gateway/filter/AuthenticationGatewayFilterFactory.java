@@ -21,6 +21,7 @@ public class AuthenticationGatewayFilterFactory extends AbstractGatewayFilterFac
 
     @Autowired
     public AuthenticationGatewayFilterFactory(JwtUtil jwtUtil){
+        super(Config.class);
         this.jwtUtil = jwtUtil;
     }
 
@@ -40,27 +41,27 @@ public class AuthenticationGatewayFilterFactory extends AbstractGatewayFilterFac
             HttpCookie cookie = mutatedExchange.getRequest().getCookies().getFirst("auth_token");
 
             if (cookie == null || cookie.getValue().trim().isEmpty()) {
-                onError(mutatedExchange, "Invalid Cookie", HttpStatus.UNAUTHORIZED);
+                return onError(mutatedExchange, "Invalid Cookie", HttpStatus.UNAUTHORIZED);
             }
 
-            String token = cookie != null ? cookie.getValue() : null;
-            ServerWebExchange modifiedExchange = null;
+            String token = cookie.getValue();
+
             try {
                 jwtUtil.validateJwtToken(token);
 
                 String userId = jwtUtil.getUserIdFromToken(token);
                 String username = jwtUtil.getUsernameFromToken(token);
 
-                modifiedExchange = mutatedExchange.mutate()
+                ServerWebExchange modifiedExchange = mutatedExchange.mutate()
                         .request(builder -> builder
                                 .header("X-User-Id", userId)
                                 .header("X-User-Name", username))
                         .build();
-            } catch (Exception e) {
-                onError(mutatedExchange, "Invalid Token", HttpStatus.UNAUTHORIZED);
-            }
 
-            return chain.filter(modifiedExchange);
+                return chain.filter(modifiedExchange);
+            } catch (Exception e) {
+                return onError(mutatedExchange, "Invalid Token", HttpStatus.UNAUTHORIZED);
+            }
         };
     }
 
