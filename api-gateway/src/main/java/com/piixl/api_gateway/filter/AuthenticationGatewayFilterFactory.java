@@ -1,6 +1,7 @@
 package com.piixl.api_gateway.filter;
 
 import com.piixl.api_gateway.Util.JwtUtil;
+import io.jsonwebtoken.Claims;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,15 +48,17 @@ public class AuthenticationGatewayFilterFactory extends AbstractGatewayFilterFac
             String token = cookie.getValue();
 
             try {
-                jwtUtil.validateJwtToken(token);
+                Claims claims = jwtUtil.validateAndGetClaims(token);
 
-                String userId = jwtUtil.getUserIdFromToken(token);
-                String username = jwtUtil.getUsernameFromToken(token);
+                String userId = String.valueOf(claims.get("userId"));
+                String username = claims.getSubject();
+                String role = claims.get("role", String.class);
 
                 ServerWebExchange modifiedExchange = mutatedExchange.mutate()
                         .request(builder -> builder
                                 .header("X-User-Id", userId)
-                                .header("X-User-Name", username))
+                                .header("X-User-Name", username)
+                                .header("X-User-Role", role))
                         .build();
 
                 return chain.filter(modifiedExchange);
