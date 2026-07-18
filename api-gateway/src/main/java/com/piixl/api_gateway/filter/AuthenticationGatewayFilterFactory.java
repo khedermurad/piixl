@@ -35,6 +35,7 @@ public class AuthenticationGatewayFilterFactory extends AbstractGatewayFilterFac
                                     httpHeaders -> {
                                         httpHeaders.remove("X-User-Id");
                                         httpHeaders.remove("X-User-Name");
+                                        httpHeaders.remove("X-User-Role");
                                     }
                             )
                     ).build();
