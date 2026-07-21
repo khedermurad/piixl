@@ -4,17 +4,10 @@ server:
 spring:
   application:
     name: api-gateway
+  profiles:
+    active: dev
   cloud:
     gateway:
-      routes:
-        - id: auth-service-route
-          uri: lb://AUTH-SERVICE
-          predicates:
-            - Path=/api/auth/**
-        - id: media-service-route
-          uri: lb://MEDIA-SERVICE
-          predicates:
-              - Path=/api/media/**
       globalcors:
         cors-configurations:
           '[/**]':
@@ -27,15 +20,28 @@ spring:
               - OPTIONS
             allowedHeaders: "*"
             allowCredentials: true
-  profiles:
-    active: dev
+      routes:
+        - id: auth-service-public
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/api/auth/register, /api/auth/login
 
+        - id: auth-service-protected
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/api/auth/me, /api/auth/logout
+          filters:
+            - Authentication
+
+        - id: media-service-route
+          uri: lb://MEDIA-SERVICE
+          predicates:
+            - Path=/api/media/**
 
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
-
 
 logging:
   level:

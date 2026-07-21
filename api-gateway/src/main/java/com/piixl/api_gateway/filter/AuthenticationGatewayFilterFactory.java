@@ -1,0 +1,82 @@
+package com.piixl.api_gateway.filter;
+
+import com.piixl.api_gateway.Util.JwtUtil;
+import io.jsonwebtoken.Claims;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.gateway.filter.GatewayFilter;
+import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
+import org.springframework.http.HttpCookie;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
+
+@Component
+public class AuthenticationGatewayFilterFactory extends AbstractGatewayFilterFactory<AuthenticationGatewayFilterFactory.Config> {
+
+    private JwtUtil jwtUtil;
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationGatewayFilterFactory.class);
+
+    @Autowired
+    public AuthenticationGatewayFilterFactory(JwtUtil jwtUtil){
+        super(Config.class);
+        this.jwtUtil = jwtUtil;
+    }
+
+    @Override
+    public GatewayFilter apply(Config config) {
+        return (exchange, chain) -> {
+            ServerWebExchange mutatedExchange = exchange
+                    .mutate().request(
+                            b -> b.headers(
+                                    httpHeaders -> {
+                                        httpHeaders.remove("X-User-Id");
+                                        httpHeaders.remove("X-User-Name");
+                                        httpHeaders.remove("X-User-Role");
+                                    }
+                            )
+                    ).build();
+
+            HttpCookie cookie = mutatedExchange.getRequest().getCookies().getFirst("auth_token");
+
+            if (cookie == null || cookie.getValue().trim().isEmpty()) {
+                return onError(mutatedExchange, "Invalid Cookie", HttpStatus.UNAUTHORIZED);
+            }
+
+            String token = cookie.getValue();
+
+            try {
+                Claims claims = jwtUtil.validateAndGetClaims(token);
+
+                String userId = String.valueOf(claims.get("userId"));
+                String username = claims.getSubject();
+                String role = claims.get("role", String.class);
+
+                ServerWebExchange modifiedExchange = mutatedExchange.mutate()
+                        .request(builder -> builder
+                                .header("X-User-Id", userId)
+                                .header("X-User-Name", username)
+                                .header("X-User-Role", role))
+                        .build();
+
+                return chain.filter(modifiedExchange);
+            } catch (Exception e) {
+                return onError(mutatedExchange, "Invalid Token", HttpStatus.UNAUTHORIZED);
+            }
+        };
+    }
+
+    private Mono<Void> onError(ServerWebExchange exchange, String err, HttpStatus httpStatus) {
+        exchange.getResponse().setStatusCode(httpStatus);
+        logger.error(err);
+        return exchange.getResponse().setComplete();
+    }
+
+    public static class Config{
+
+    }
+
+}
