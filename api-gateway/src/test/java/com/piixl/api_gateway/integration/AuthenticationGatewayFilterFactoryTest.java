@@ -35,6 +35,11 @@ public class AuthenticationGatewayFilterFactoryTest {
     @Autowired
     private WebTestClient webTestClient;
 
+    @BeforeEach
+    void clearWireMock() {
+        reset();
+    }
+
     @Test
     void shouldReturnUnauthorizedWhenAuthTokenCookieIsMissing(){
         webTestClient.get()
@@ -42,11 +47,6 @@ public class AuthenticationGatewayFilterFactoryTest {
                 .exchange()
                 .expectStatus().isUnauthorized();
 
-    }
-
-    @BeforeEach
-    void clearWireMock() {
-        reset();
     }
 
     @Test
@@ -92,7 +92,7 @@ public class AuthenticationGatewayFilterFactoryTest {
 
 
     @Test
-    void shouldRemovePreFilledHeadersAndNotPassThrough() {
+    void shouldOverwritePreFilledHeadersWithTokenClaims() {
         String validToken = generateToken("TestUser", "USER", "12345", 3600000);
 
 
@@ -117,14 +117,6 @@ public class AuthenticationGatewayFilterFactoryTest {
                 .withHeader("X-User-Name", equalTo("TestUser")));
     }
 
-
-    private Claims claimsExample() {
-        return Jwts.claims()
-                .subject("TestUser")
-                .add("role", "USER")
-                .add("userId", "12345")
-                .build();
-    }
 
     public String generateToken(String username, String role, String userId, int expirationMs){
         Map<String, Object> claims = new HashMap<>();
