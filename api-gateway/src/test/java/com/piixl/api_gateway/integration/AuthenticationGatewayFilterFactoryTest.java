@@ -2,7 +2,6 @@ package com.piixl.api_gateway.integration;
 
 
 
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,10 +22,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
                 "jwt.secret=defaultSecretForTesting12345678901234567890",
                 "eureka.client.enabled=false",
 
-                "spring.cloud.gateway.routes[0].id=auth-service-test-route",
-                "spring.cloud.gateway.routes[0].uri=http://localhost:${wiremock.server.port}",
-                "spring.cloud.gateway.routes[0].predicates[0]=Path=/api/auth/me",
-                "spring.cloud.gateway.routes[0].filters[0]=Authentication"
+                "spring.cloud.discovery.client.simple.instances.AUTH-SERVICE[0].uri=http://localhost:${wiremock.server.port}"
         }
 )
 @AutoConfigureWireMock(port = 0)
@@ -38,6 +34,50 @@ public class AuthenticationGatewayFilterFactoryTest {
     @BeforeEach
     void clearWireMock() {
         reset();
+    }
+
+    @Test
+    void shouldAllowPublicAccessToLoginWithoutToken() {
+        stubFor(post(urlEqualTo("/api/auth/login"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withBody("Login successful")));
+
+        webTestClient.post()
+                .uri("/api/auth/login")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class).isEqualTo("Login successful");
+
+        verify(1, postRequestedFor(urlEqualTo("/api/auth/login")));
+    }
+
+    @Test
+    void shouldAllowPublicAccessToRegisterWithoutToken() {
+        stubFor(post(urlEqualTo("/api/auth/register"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withBody("Register successful")));
+
+        webTestClient.post()
+                .uri("/api/auth/register")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class).isEqualTo("Register successful");
+
+        verify(1, postRequestedFor(urlEqualTo("/api/auth/register")));
+    }
+
+    @Test
+    void shouldAllowPublicAccessToLoginEvenWithInvalidToken() {
+        stubFor(post(urlEqualTo("/api/auth/login"))
+                .willReturn(aResponse().withStatus(200).withBody("Login successful")));
+
+        webTestClient.post()
+                .uri("/api/auth/login")
+                .cookie("auth_token", "garbage")
+                .exchange()
+                .expectStatus().isOk();
     }
 
     @Test
