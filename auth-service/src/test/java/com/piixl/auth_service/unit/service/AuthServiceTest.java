@@ -4,7 +4,7 @@ import com.piixl.auth_service.exception.PasswordMismatchException;
 import com.piixl.auth_service.exception.TooYoungException;
 import com.piixl.auth_service.exception.UserExistsException;
 import com.piixl.auth_service.model.*;
-import com.piixl.auth_service.repository.AuthRepository;
+import com.piixl.auth_service.repository.UserRepository;
 import com.piixl.auth_service.security.JwtUtil;
 import com.piixl.auth_service.service.AuthService;
 import org.junit.jupiter.api.Assertions;
@@ -34,7 +34,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class AuthServiceTest {
     @Mock
-    private AuthRepository authRepository;
+    private UserRepository authRepository;
 
     // No Mock because of blocking by Mockito
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
