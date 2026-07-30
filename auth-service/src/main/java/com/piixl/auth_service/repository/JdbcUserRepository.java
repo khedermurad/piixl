@@ -93,4 +93,31 @@ public class JdbcUserRepository implements UserRepository{
         return count != null && count > 0;
     }
 
+    @Override
+    public void deleteAllInBatch() {
+        String sql = "DELETE FROM users";
+        namedParameterJdbcTemplate.getJdbcOperations().update(sql);
+    }
+
+    @Override
+    public List<UserEntity> findAll() {
+        String sql = "SELECT * FROM users";
+
+        return namedParameterJdbcTemplate.getJdbcOperations().query(sql,
+                (rs, rowNum) -> {
+                    return UserEntity.builder()
+                            .id(rs.getLong("id"))
+                            .createdAt(rs.getObject("created_at", LocalDate.class))
+                            .email(rs.getString("email"))
+                            .enabled(rs.getBoolean("enabled"))
+                            .password(rs.getString("password"))
+                            .role(Role.valueOf(rs.getString("role")))
+                            .termsAccepted(rs.getBoolean("terms_accepted"))
+                            .username(rs.getString("username"))
+                            .dateOfBirth(rs.getObject("date_of_birth", LocalDate.class))
+                            .build();
+                }
+        );
+    }
+
 }

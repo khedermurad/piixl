@@ -147,7 +147,7 @@ public class AuthServiceTest {
         String jwtToken = authService.login(loginRequest);
 
         assertEquals("jwt_token", jwtToken);
-        verify(authRepository).findByUsername("user"); // Verifizieren, dass er gesucht wurde
+        verify(authRepository).findByUsername("user");
     }
 
     @Test
