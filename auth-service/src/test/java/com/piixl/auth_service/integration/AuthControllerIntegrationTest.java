@@ -5,7 +5,7 @@ import com.piixl.auth_service.TestContainersConfiguration;
 import com.piixl.auth_service.model.LoginRequest;
 import com.piixl.auth_service.model.RegisterRequest;
 import com.piixl.auth_service.model.UserEntity;
-import com.piixl.auth_service.repository.AuthRepository;
+import com.piixl.auth_service.repository.JdbcUserRepository;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,7 +43,7 @@ public class AuthControllerIntegrationTest {
     private WebApplicationContext context;
 
     @Autowired
-    private AuthRepository authRepository;
+    private JdbcUserRepository jdbcUserRepository;
 
     private ObjectMapper objectMapper;
 
@@ -64,7 +64,7 @@ public class AuthControllerIntegrationTest {
 
     @BeforeEach
     void cleanUpDb(){
-        authRepository.deleteAllInBatch();
+        jdbcUserRepository.deleteAllInBatch();
     }
 
     @AfterEach
@@ -83,8 +83,8 @@ public class AuthControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        Optional<UserEntity> savedUser = authRepository.findByUsername(registerRequest.getUsername());
-        List<UserEntity> userList = authRepository.findAll();
+        Optional<UserEntity> savedUser = jdbcUserRepository.findByUsername(registerRequest.getUsername());
+        List<UserEntity> userList = jdbcUserRepository.findAll();
 
         assertThat(savedUser).isPresent();
         assertThat(savedUser.get().getEmail()).isEqualTo(registerRequest.getEmail());
@@ -103,7 +103,7 @@ public class AuthControllerIntegrationTest {
                 .andExpect(status().isCreated());
 
 
-        assertThat(authRepository.findByUsername(registerRequest.getUsername()))
+        assertThat(jdbcUserRepository.findByUsername(registerRequest.getUsername()))
                 .isPresent()
                 .hasValueSatisfying(user -> {
                     assertThat(user.getEmail()).isEqualTo(registerRequest.getEmail());
@@ -134,7 +134,7 @@ public class AuthControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        assertThat(authRepository.findByUsername(registerRequest.getUsername()))
+        assertThat(jdbcUserRepository.findByUsername(registerRequest.getUsername()))
                 .isPresent()
                 .hasValueSatisfying(user -> {
                     assertThat(user.getEmail()).isEqualTo(registerRequest.getEmail());
@@ -166,7 +166,7 @@ public class AuthControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
-        assertThat(authRepository.findAll().size()).isEqualTo(0);
+        assertThat(jdbcUserRepository.findAll().size()).isEqualTo(0);
     }
 
     @Test
@@ -182,7 +182,7 @@ public class AuthControllerIntegrationTest {
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.message").value("The password entered and the confirmed password do not match."));
 
-        assertThat(authRepository.findAll().size()).isEqualTo(0);
+        assertThat(jdbcUserRepository.findAll().size()).isEqualTo(0);
     }
 
 
@@ -198,7 +198,7 @@ public class AuthControllerIntegrationTest {
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.message").value("You are too young: "
                 + registerRequest.getDateOfBirth()));
-        assertThat(authRepository.findAll().size()).isEqualTo(0);
+        assertThat(jdbcUserRepository.findAll().size()).isEqualTo(0);
     }
 
     @Test
