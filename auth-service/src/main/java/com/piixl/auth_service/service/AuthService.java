@@ -24,6 +24,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDate;
 import java.time.Period;
 
@@ -51,6 +53,7 @@ public class AuthService {
         this.rabbitTemplate = rabbitTemplate;
     }
 
+    @Transactional
     public RegisterResponse registerUser(RegisterRequest registerRequest){
         if (userRepository.existsByUsername(registerRequest.getUsername().toLowerCase())){
             throw new UserExistsException("An account with this username already exists: "
@@ -80,6 +83,8 @@ public class AuthService {
 
         UserEvent userEvent = new UserEvent(userEntity.getId(), registerRequest.getProfileName(),
                 userEntity.getUsername(), userEntity.getEmail(), userEntity.getDateOfBirth());
+        // TODO: Dual-Write risk! Database commit might fail after RabbitMQ message is sent.
+        // Needs refactoring to Transactional Outbox Pattern (see Ticket #32)
         rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE, "user.created", userEvent);
 
         return RegisterResponse.builder()
