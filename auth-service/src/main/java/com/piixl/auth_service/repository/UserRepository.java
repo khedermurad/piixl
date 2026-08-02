@@ -12,4 +12,5 @@ public interface UserRepository {
     UserEntity save(UserEntity userEntity);
     void deleteAllInBatch();
     List<UserEntity> findAll();
+    Optional<UserEntity> findById(Long id);
 }

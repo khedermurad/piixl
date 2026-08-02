@@ -120,4 +120,27 @@ public class JdbcUserRepository implements UserRepository{
         );
     }
 
+    @Override
+    public Optional<UserEntity> findById(Long id) {
+        String sql = "SELECT * FROM users WHERE id = :id";
+        Map<String, Long> params = Map.of("id", id);
+        List<UserEntity> results = namedParameterJdbcTemplate.query(sql, params,
+                (rs, rowNum) -> {
+                    return UserEntity.builder()
+                            .id(rs.getLong("id"))
+                            .createdAt(rs.getObject("created_at", LocalDate.class))
+                            .email(rs.getString("email"))
+                            .enabled(rs.getBoolean("enabled"))
+                            .password(rs.getString("password"))
+                            .role(Role.valueOf(rs.getString("role")))
+                            .termsAccepted(rs.getBoolean("terms_accepted"))
+                            .username(rs.getString("username"))
+                            .dateOfBirth(rs.getObject("date_of_birth", LocalDate.class))
+                            .build();
+                }
+        );
+
+        return results.stream().findFirst();
+    }
+
 }
