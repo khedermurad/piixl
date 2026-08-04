@@ -14,7 +14,7 @@ email email_address NOT NULL,
 enabled BOOLEAN NOT NULL,
 password TEXT NOT NULL,
 role user_role NOT NULL DEFAULT 'USER',
-terms_accepted BOOLEAN,
+terms_accepted BOOLEAN NOT NULL,
 username TEXT NOT NULL,
 date_of_birth date NOT NULL,
 
