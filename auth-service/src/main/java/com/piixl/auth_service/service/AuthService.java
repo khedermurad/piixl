@@ -10,7 +10,7 @@ import com.piixl.auth_service.model.Role;
 import com.piixl.auth_service.model.UserEntity;
 import com.piixl.auth_service.model.UserEvent;
 import com.piixl.auth_service.model.LoginRequest;
-import com.piixl.auth_service.repository.AuthRepository;
+import com.piixl.auth_service.repository.UserRepository;
 import com.piixl.auth_service.security.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,12 +24,14 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDate;
 import java.time.Period;
 
 @Service
 public class AuthService {
-    private AuthRepository authRepository;
+    private UserRepository userRepository;
     private BCryptPasswordEncoder passwordEncoder;
     private AuthenticationManager authenticationManager;
     private JwtUtil jwtUtil;
@@ -39,24 +41,25 @@ public class AuthService {
 
 
     @Autowired
-    public AuthService(AuthRepository authRepository,
+    public AuthService(UserRepository userRepository,
                        BCryptPasswordEncoder passwordEncoder,
                        AuthenticationManager authenticationManager,
                        JwtUtil jwtUtil,
                        RabbitTemplate rabbitTemplate){
-        this.authRepository = authRepository;
+        this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.rabbitTemplate = rabbitTemplate;
     }
 
+    @Transactional
     public RegisterResponse registerUser(RegisterRequest registerRequest){
-        if (authRepository.existsByUsername(registerRequest.getUsername().toLowerCase())){
+        if (userRepository.existsByUsername(registerRequest.getUsername().toLowerCase())){
             throw new UserExistsException("An account with this username already exists: "
             + registerRequest.getUsername());
         }
-        if(authRepository.existsByEmail(registerRequest.getEmail().toLowerCase())){
+        if(userRepository.existsByEmail(registerRequest.getEmail().toLowerCase())){
             throw new UserExistsException("An account with this email already exists: "
             + registerRequest.getEmail());
         }
@@ -67,7 +70,7 @@ public class AuthService {
             throw new TooYoungException("You are too young: " + registerRequest.getDateOfBirth());
         }
 
-        UserEntity userEntity = this.authRepository.save(UserEntity
+        UserEntity userEntity = this.userRepository.save(UserEntity
                 .builder().username(registerRequest.getUsername().toLowerCase())
                 .email(registerRequest.getEmail().toLowerCase())
                 .password(passwordEncoder.encode(registerRequest.getPassword()))
@@ -80,6 +83,8 @@ public class AuthService {
 
         UserEvent userEvent = new UserEvent(userEntity.getId(), registerRequest.getProfileName(),
                 userEntity.getUsername(), userEntity.getEmail(), userEntity.getDateOfBirth());
+        // TODO: Dual-Write risk! Database commit might fail after RabbitMQ message is sent.
+        // Needs refactoring to Transactional Outbox Pattern (see Ticket #32)
         rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE, "user.created", userEvent);
 
         return RegisterResponse.builder()
@@ -97,7 +102,7 @@ public class AuthService {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        UserEntity user = authRepository.findByUsername(authentication.getName())
+        UserEntity user = userRepository.findByUsername(authentication.getName())
                 .orElseThrow(() -> {
                     logger.warn("Authenticated user {} not found in repository", authentication.getName());
                     return new BadCredentialsException("Username or password is incorrect");

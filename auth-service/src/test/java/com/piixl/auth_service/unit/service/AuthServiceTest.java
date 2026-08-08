@@ -4,7 +4,7 @@ import com.piixl.auth_service.exception.PasswordMismatchException;
 import com.piixl.auth_service.exception.TooYoungException;
 import com.piixl.auth_service.exception.UserExistsException;
 import com.piixl.auth_service.model.*;
-import com.piixl.auth_service.repository.AuthRepository;
+import com.piixl.auth_service.repository.UserRepository;
 import com.piixl.auth_service.security.JwtUtil;
 import com.piixl.auth_service.service.AuthService;
 import org.junit.jupiter.api.Assertions;
@@ -34,7 +34,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class AuthServiceTest {
     @Mock
-    private AuthRepository authRepository;
+    private UserRepository userRepository;
 
     // No Mock because of blocking by Mockito
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
@@ -52,7 +52,7 @@ public class AuthServiceTest {
 
     @BeforeEach
     void setUp(){
-        authService = new AuthService(authRepository, passwordEncoder,
+        authService = new AuthService(userRepository, passwordEncoder,
                 authenticationManager, jwtUtil, rabbitTemplate);
     }
 
@@ -60,12 +60,12 @@ public class AuthServiceTest {
     void shouldReturnRegisterResponse(){
         RegisterRequest registerRequest = validRegisterRequest();
 
-        when(authRepository.save(any(UserEntity.class))).thenReturn(UserEntity.builder().id(12L).username("testuser").build());
+        when(userRepository.save(any(UserEntity.class))).thenReturn(UserEntity.builder().id(12L).username("testuser").build());
 
         RegisterResponse registerResponse = authService.registerUser(registerRequest);
 
         ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
-        verify(authRepository).save(captor.capture());
+        verify(userRepository).save(captor.capture());
 
         UserEntity savedUser = captor.getValue();
         Assertions.assertNotEquals("test12345", savedUser.getPassword());
@@ -78,23 +78,23 @@ public class AuthServiceTest {
     void shouldThrowExceptionWhenAccountWithUsernameExists(){
         RegisterRequest registerRequest = validRegisterRequest();
 
-        when(authRepository.existsByUsername(registerRequest.getUsername())).thenReturn(true);
+        when(userRepository.existsByUsername(registerRequest.getUsername())).thenReturn(true);
 
         UserExistsException ex = assertThrows(UserExistsException.class, () -> authService.registerUser(registerRequest));
         Assertions.assertEquals("An account with this username already exists: " + registerRequest.getUsername(), ex.getMessage());
-        verify(authRepository, never()).save(any(UserEntity.class));
+        verify(userRepository, never()).save(any(UserEntity.class));
     }
 
     @Test
     void shouldThrowExceptionWhenAccountWithEmailExists(){
         RegisterRequest registerRequest = validRegisterRequest();
 
-        when(authRepository.existsByEmail(registerRequest.getEmail())).thenReturn(true);
+        when(userRepository.existsByEmail(registerRequest.getEmail())).thenReturn(true);
 
         UserExistsException ex = assertThrows(UserExistsException.class, () -> authService.registerUser(registerRequest));
         Assertions.assertEquals("An account with this email already exists: "
                 + registerRequest.getEmail(), ex.getMessage());
-        verify(authRepository, never()).save(any(UserEntity.class));
+        verify(userRepository, never()).save(any(UserEntity.class));
     }
 
 
@@ -104,13 +104,13 @@ public class AuthServiceTest {
         registerRequest.setPassword("test");
         registerRequest.setPasswordConfirm("different");
 
-        when(authRepository.existsByUsername(registerRequest.getUsername())).thenReturn(false);
-        when(authRepository.existsByEmail(registerRequest.getEmail())).thenReturn(false);
+        when(userRepository.existsByUsername(registerRequest.getUsername())).thenReturn(false);
+        when(userRepository.existsByEmail(registerRequest.getEmail())).thenReturn(false);
 
 
         PasswordMismatchException ex = assertThrows(PasswordMismatchException.class, () -> authService.registerUser(registerRequest));
         Assertions.assertEquals("The password entered and the confirmed password do not match.", ex.getMessage());
-        verify(authRepository, never()).save(any(UserEntity.class));
+        verify(userRepository, never()).save(any(UserEntity.class));
     }
 
     @Test
@@ -118,13 +118,13 @@ public class AuthServiceTest {
         RegisterRequest registerRequest = validRegisterRequest();
         registerRequest.setDateOfBirth(LocalDate.now().minusYears(12));
 
-        when(authRepository.existsByUsername(registerRequest.getUsername())).thenReturn(false);
-        when(authRepository.existsByEmail(registerRequest.getEmail())).thenReturn(false);
+        when(userRepository.existsByUsername(registerRequest.getUsername())).thenReturn(false);
+        when(userRepository.existsByEmail(registerRequest.getEmail())).thenReturn(false);
 
 
         TooYoungException ex = assertThrows(TooYoungException.class, () -> authService.registerUser(registerRequest));
         Assertions.assertEquals("You are too young: " + registerRequest.getDateOfBirth(), ex.getMessage());
-        verify(authRepository, never()).save(any(UserEntity.class));
+        verify(userRepository, never()).save(any(UserEntity.class));
     }
 
     @Test
@@ -141,13 +141,13 @@ public class AuthServiceTest {
         Authentication mockAuth = new UsernamePasswordAuthenticationToken("user", "password", authorities);
 
         when(authenticationManager.authenticate(any(Authentication.class))).thenReturn(mockAuth);
-        when(authRepository.findByUsername("user")).thenReturn(java.util.Optional.of(mockUser));
+        when(userRepository.findByUsername("user")).thenReturn(java.util.Optional.of(mockUser));
         when(jwtUtil.generateToken("user", Role.USER, 12L)).thenReturn("jwt_token");
 
         String jwtToken = authService.login(loginRequest);
 
         assertEquals("jwt_token", jwtToken);
-        verify(authRepository).findByUsername("user"); // Verifizieren, dass er gesucht wurde
+        verify(userRepository).findByUsername("user");
     }
 
     @Test
@@ -168,7 +168,7 @@ public class AuthServiceTest {
         Authentication mockAuth = new UsernamePasswordAuthenticationToken("user", "password", authorities);
 
         when(authenticationManager.authenticate(any(Authentication.class))).thenReturn(mockAuth);
-        when(authRepository.findByUsername(mockAuth.getName())).thenReturn(Optional.empty());
+        when(userRepository.findByUsername(mockAuth.getName())).thenReturn(Optional.empty());
 
         assertThrows(BadCredentialsException.class, () -> authService.login(loginRequest));
         verify(jwtUtil, never()).generateToken(anyString(), any(Role.class), eq(12L));
