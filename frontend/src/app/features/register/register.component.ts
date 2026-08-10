@@ -10,10 +10,7 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { DefaultInputComponent } from '../../shared/components/default-input/default-input.component';
 import { DefaultButtonComponent } from '../../shared/components/default-button/default-button.component';
-import {
-  ageLimitValidator,
-  passwordMatchValidator,
-} from '../../shared/validators/custom.validators';
+import { ageLimitValidator, valueMatchValidator } from '../../shared/validators/custom.validators';
 import { Location } from '@angular/common';
 import { AuthService } from '../../core/services/auth-service/auth.service';
 import { RegisterRequest } from '../../core/models/auth/register-request';
@@ -57,7 +54,7 @@ export class RegisterComponent {
         password: new FormControl<string>('', [Validators.required]),
         confirmPassword: new FormControl<string>('', [Validators.required]),
       },
-      { validators: passwordMatchValidator },
+      { validators: valueMatchValidator('password', 'confirmPassword') },
     ),
   });
 
