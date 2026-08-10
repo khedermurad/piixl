@@ -42,22 +42,24 @@ export class RegisterComponent {
   private location = inject(Location);
   private destroyRef = inject(DestroyRef);
 
-  registerForm = new FormGroup(
-    {
-      name: new FormControl<string>('', [Validators.required]),
-      username: new FormControl<string>('', [
-        Validators.required,
-        Validators.minLength(5),
-        Validators.maxLength(20),
-        Validators.pattern('^[A-Za-z]{5}.*$'),
-      ]),
-      email: new FormControl<string>('', [Validators.required, Validators.email]),
-      birthday: new FormControl<string>('', [Validators.required, ageLimitValidator(13)]),
-      password: new FormControl<string>('', [Validators.required]),
-      confirmPassword: new FormControl<string>('', [Validators.required]),
-    },
-    { validators: passwordMatchValidator },
-  );
+  registerForm = new FormGroup({
+    name: new FormControl<string>('', [Validators.required]),
+    username: new FormControl<string>('', [
+      Validators.required,
+      Validators.minLength(5),
+      Validators.maxLength(20),
+      Validators.pattern('^[A-Za-z]{5}.*$'),
+    ]),
+    email: new FormControl<string>('', [Validators.required, Validators.email]),
+    birthday: new FormControl<string>('', [Validators.required, ageLimitValidator(13)]),
+    passwords: new FormGroup(
+      {
+        password: new FormControl<string>('', [Validators.required]),
+        confirmPassword: new FormControl<string>('', [Validators.required]),
+      },
+      { validators: passwordMatchValidator },
+    ),
+  });
 
   get f() {
     return this.registerForm.controls;
