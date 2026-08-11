@@ -11,7 +11,6 @@ import {
   Validators,
   ɵInternalFormsSharedModule,
 } from '@angular/forms';
-import { passwordMatchValidator } from '../../shared/validators/custom.validators';
 import { AuthService } from '../../core/services/auth-service/auth.service';
 import { LoginRequest } from '../../core/models/auth/login-request';
 import { finalize } from 'rxjs';

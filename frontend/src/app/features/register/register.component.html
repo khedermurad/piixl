@@ -29,18 +29,20 @@
       label="Birthday"
       type="date"
     ></app-default-input>
-    <app-default-input
-      [control]="f.password"
-      placeholder="Password"
-      label="Password"
-      type="password"
-    ></app-default-input>
-    <app-default-input
-      [control]="f.confirmPassword"
-      placeholder="Confirm password"
-      label="Confirm password"
-      type="password"
-    ></app-default-input>
+    <div formGroupName="passwords">
+      <app-default-input
+        [control]="f.passwords.controls.password"
+        placeholder="Password"
+        label="Password"
+        type="password"
+      ></app-default-input>
+      <app-default-input
+        [control]="f.passwords.controls.confirmPassword"
+        placeholder="Confirm password"
+        label="Confirm password"
+        type="password"
+      ></app-default-input>
+    </div>
     @if (errorMessage()) {
       <small>{{ errorMessage() }}</small>
     }

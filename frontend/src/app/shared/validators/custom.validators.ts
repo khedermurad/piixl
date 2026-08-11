@@ -10,21 +10,27 @@ export function ageLimitValidator(maxAge: number): ValidatorFn {
   };
 }
 
-export function passwordMatchValidator(g: AbstractControl): ValidationErrors | null {
-  const password = g.get('password');
-  const confirmPassword = g.get('confirmPassword');
+export function valueMatchValidator(controlName1: string, controlName2: string): ValidatorFn {
+  return (group: AbstractControl): ValidationErrors | null => {
+    const control1 = group.get(controlName1);
+    const control2 = group.get(controlName2);
 
-  if (!password || !confirmPassword) return null;
-
-  if (password.value !== confirmPassword.value) {
-    confirmPassword.setErrors({ mismatch: true });
-    return { mismatch: true };
-  } else {
-    if (confirmPassword.hasError('mismatch')) {
-      confirmPassword.setErrors(null);
+    if (!control1 || !control2) {
+      return null;
     }
-    return null;
-  }
+    const isMismatch = control1.value !== control2.value;
+
+    if (isMismatch) {
+      control2.setErrors({ ...control2.errors, mismatch: true });
+      return { mismatch: true };
+    } else {
+      if (control2.hasError('mismatch')) {
+        const { mismatch, ...otherErrors } = control2.errors || {};
+        control2.setErrors(Object.keys(otherErrors).length ? otherErrors : null);
+      }
+      return null;
+    }
+  };
 }
 
 function calculateAge(birthdate: string | Date): number {
