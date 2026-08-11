@@ -81,11 +81,12 @@ export class RegisterComponent {
         username: this.registerForm.get('username')!.value!,
         profileName: this.registerForm.get('name')!.value!,
         email: this.registerForm.get('email')!.value!,
-        password: this.registerForm.get('password')!.value!,
-        passwordConfirm: this.registerForm.get('confirmPassword')!.value!,
+        password: this.registerForm.controls.passwords.get('password')!.value!,
+        passwordConfirm: this.registerForm.controls.passwords.get('confirmPassword')!.value!,
         dateOfBirth: this.registerForm.get('birthday')!.value!,
         termsAccepted: true,
       };
+      console.log(registerRequest);
 
       this.authService
         .register(registerRequest)

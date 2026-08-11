@@ -10,23 +10,6 @@ export function ageLimitValidator(maxAge: number): ValidatorFn {
   };
 }
 
-export function passwordMatchValidator(g: AbstractControl): ValidationErrors | null {
-  const password = g.get('password');
-  const confirmPassword = g.get('confirmPassword');
-
-  if (!password || !confirmPassword) return null;
-
-  if (password.value !== confirmPassword.value) {
-    confirmPassword.setErrors({ mismatch: true });
-    return { mismatch: true };
-  } else {
-    if (confirmPassword.hasError('mismatch')) {
-      confirmPassword.setErrors(null);
-    }
-    return null;
-  }
-}
-
 export function valueMatchValidator(controlName1: string, controlName2: string): ValidatorFn {
   return (group: AbstractControl): ValidationErrors | null => {
     const control1 = group.get(controlName1);
