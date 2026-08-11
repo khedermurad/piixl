@@ -86,7 +86,6 @@ export class RegisterComponent {
         dateOfBirth: this.registerForm.get('birthday')!.value!,
         termsAccepted: true,
       };
-      console.log(registerRequest);
 
       this.authService
         .register(registerRequest)
