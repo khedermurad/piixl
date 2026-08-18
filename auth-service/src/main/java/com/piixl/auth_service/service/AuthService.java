@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,9 +26,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.Map;
 
 @Service
 public class AuthService {
@@ -116,6 +119,14 @@ public class AuthService {
         Role userRole = Role.valueOf(roleName.replace("ROLE_", ""));
 
         return jwtUtil.generateToken(authentication.getName(), userRole, user.getId());
+    }
+
+    public Map<String, Boolean> checkUserExistence(String username, String email){
+        boolean emailExists = StringUtils.hasText(email) && userRepository.existsByEmail(email);
+
+        boolean usernameExists = StringUtils.hasText(username) && userRepository.existsByUsername(username);
+
+        return Map.of("emailExists", emailExists, "usernameExists", usernameExists);
     }
 
 
