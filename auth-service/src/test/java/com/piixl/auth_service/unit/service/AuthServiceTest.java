@@ -24,6 +24,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -172,6 +173,47 @@ public class AuthServiceTest {
 
         assertThrows(BadCredentialsException.class, () -> authService.login(loginRequest));
         verify(jwtUtil, never()).generateToken(anyString(), any(Role.class), eq(12L));
+    }
+
+    @Test
+    void shouldReturnMapWithTrueValuesWhenWhenUsernameAndEmailExists(){
+        String username = "testUser";
+        String email = "testEmail";
+
+        when(userRepository.existsByUsername(username)).thenReturn(true);
+        when(userRepository.existsByEmail(email)).thenReturn(true);
+
+        Map<String, Boolean> result = authService.checkUserExistence(username, email);
+        assertTrue(result.get("emailExists"));
+        assertTrue(result.get("usernameExists"));
+    }
+
+    @Test
+    void shouldReturnMapWithFalseValuesWhenWhenUsernameAndEmailDoNotExists(){
+        String username = "testUser";
+        String email = "testEmail";
+
+        when(userRepository.existsByUsername(username)).thenReturn(false);
+        when(userRepository.existsByEmail(email)).thenReturn(false);
+
+        Map<String, Boolean> result = authService.checkUserExistence(username, email);
+        assertFalse(result.get("emailExists"));
+        assertFalse(result.get("usernameExists"));
+    }
+
+    @Test
+    void shouldReturnMapWithFalseValuesWhenWhenUsernameAndEmailAreBlank(){
+        String username = "";
+        String email = "";
+
+
+        Map<String, Boolean> result = authService.checkUserExistence(username, email);
+
+        assertFalse(result.get("emailExists"));
+        assertFalse(result.get("usernameExists"));
+
+        verify(userRepository, never()).existsByUsername(anyString());
+        verify(userRepository, never()).existsByEmail(anyString());
     }
 
 
