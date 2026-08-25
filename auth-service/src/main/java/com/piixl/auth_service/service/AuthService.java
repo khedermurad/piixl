@@ -30,6 +30,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.HashMap;
 import java.util.Map;
 
 @Service
@@ -122,11 +123,17 @@ public class AuthService {
     }
 
     public Map<String, Boolean> checkUserExistence(String username, String email){
-        boolean emailExists = StringUtils.hasText(email) && userRepository.existsByEmail(email);
+        Map<String, Boolean> result = new HashMap<>();
 
-        boolean usernameExists = StringUtils.hasText(username) && userRepository.existsByUsername(username);
+        result.put("emailExists", StringUtils.hasText(email)
+                ? userRepository.existsByEmail(email)
+                : null);
 
-        return Map.of("emailExists", emailExists, "usernameExists", usernameExists);
+        result.put("usernameExists", StringUtils.hasText(username)
+                ? userRepository.existsByUsername(username)
+                : null);
+
+        return result;
     }
 
 
