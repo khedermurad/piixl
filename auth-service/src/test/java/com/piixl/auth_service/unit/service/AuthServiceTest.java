@@ -202,15 +202,15 @@ public class AuthServiceTest {
     }
 
     @Test
-    void shouldReturnMapWithFalseValuesWhenWhenUsernameAndEmailAreBlank(){
+    void shouldReturnMapWithNullValuesWhenWhenUsernameAndEmailAreBlank(){
         String username = "";
         String email = "";
 
 
         Map<String, Boolean> result = authService.checkUserExistence(username, email);
 
-        assertFalse(result.get("emailExists"));
-        assertFalse(result.get("usernameExists"));
+        assertNull(result.get("emailExists"));
+        assertNull(result.get("usernameExists"));
 
         verify(userRepository, never()).existsByUsername(anyString());
         verify(userRepository, never()).existsByEmail(anyString());
