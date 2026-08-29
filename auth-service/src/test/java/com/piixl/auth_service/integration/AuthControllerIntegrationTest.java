@@ -28,10 +28,11 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
+import static org.hamcrest.Matchers.is;
 @SpringBootTest
 @Import({TestContainersConfiguration.class})
 @ActiveProfiles("test")
@@ -376,6 +377,54 @@ public class AuthControllerIntegrationTest {
         assertThat(logoutCookie.getAttribute("SameSite")).isEqualTo("Lax");
     }
 
+
+
+    @Test
+    void shouldReturnOkAndTrueWhenCheckExistence() throws Exception {
+        RegisterRequest registerRequest = validRegisterRequest();
+        String registerString = objectMapper.writeValueAsString(registerRequest);
+
+        mockMvc.perform(post("/api/auth/register")
+                        .content(registerString)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/auth/check-existence")
+                        .param("email", registerRequest.getEmail())
+                        .param("username", registerRequest.getUsername()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.usernameExists").value(is(true)))
+                .andExpect(jsonPath("$.emailExists").value(is(true)));
+    }
+
+    @Test
+    void shouldReturnOkAndFalseWhenCheckExistence() throws Exception {
+        RegisterRequest registerRequest = validRegisterRequest();
+
+        mockMvc.perform(get("/api/auth/check-existence")
+                        .param("email", registerRequest.getEmail())
+                        .param("username", registerRequest.getUsername()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.usernameExists").value(is(false)))
+                .andExpect(jsonPath("$.emailExists").value(is(false)));
+    }
+
+    @Test
+    void shouldReturnOkAndTrueForProvidedParameterAndNullForNotProvidedParameterWhenCheckExistence() throws Exception {
+        RegisterRequest registerRequest = validRegisterRequest();
+        String registerString = objectMapper.writeValueAsString(registerRequest);
+
+        mockMvc.perform(post("/api/auth/register")
+                        .content(registerString)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/auth/check-existence")
+                        .param("username", registerRequest.getUsername()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.usernameExists").value(is(true)))
+                .andExpect(jsonPath("$.emailExists").value(nullValue()));
+    }
 
 
 
