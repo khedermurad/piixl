@@ -4,12 +4,7 @@ import com.piixl.auth_service.config.RabbitConfig;
 import com.piixl.auth_service.exception.PasswordMismatchException;
 import com.piixl.auth_service.exception.TooYoungException;
 import com.piixl.auth_service.exception.UserExistsException;
-import com.piixl.auth_service.model.RegisterRequest;
-import com.piixl.auth_service.model.RegisterResponse;
-import com.piixl.auth_service.model.Role;
-import com.piixl.auth_service.model.UserEntity;
-import com.piixl.auth_service.model.UserEvent;
-import com.piixl.auth_service.model.LoginRequest;
+import com.piixl.auth_service.model.*;
 import com.piixl.auth_service.repository.UserRepository;
 import com.piixl.auth_service.security.JwtUtil;
 import org.slf4j.Logger;
@@ -121,18 +116,16 @@ public class AuthService {
         return jwtUtil.generateToken(authentication.getName(), userRole, user.getId());
     }
 
-    public Map<String, Boolean> checkUserExistence(String username, String email){
-        Map<String, Boolean> result = new HashMap<>();
-
-        result.put("emailExists", StringUtils.hasText(email)
-                ? userRepository.existsByEmail(email)
-                : null);
-
-        result.put("usernameExists", StringUtils.hasText(username)
+    public UserExistenceResponse checkUserExistence(String username, String email){
+        Boolean usernameExists = StringUtils.hasText(username)
                 ? userRepository.existsByUsername(username)
-                : null);
+                : null;
 
-        return result;
+        Boolean emailExists = StringUtils.hasText(email)
+                ? userRepository.existsByEmail(email)
+                : null;
+
+        return new UserExistenceResponse(usernameExists, emailExists);
     }
 
 

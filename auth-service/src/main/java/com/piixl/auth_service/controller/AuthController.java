@@ -3,6 +3,7 @@ package com.piixl.auth_service.controller;
 import com.piixl.auth_service.model.LoginRequest;
 import com.piixl.auth_service.model.RegisterRequest;
 import com.piixl.auth_service.model.RegisterResponse;
+import com.piixl.auth_service.model.UserExistenceResponse;
 import com.piixl.auth_service.service.AuthService;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
@@ -88,7 +89,7 @@ public class AuthController {
     }
 
     @GetMapping("/check-existence")
-    public ResponseEntity<Map<String, Boolean>> checkExistence(
+    public ResponseEntity<UserExistenceResponse> checkExistence(
             @RequestParam(required = false)
             @Size(min = 5, max = 20, message = "Username must be between 5 and 20 characters")
             @Pattern(regexp = "^[A-Za-z]{5}.*", message = "Username must start with 5 letters")
