@@ -4,7 +4,13 @@ import com.piixl.auth_service.config.RabbitConfig;
 import com.piixl.auth_service.exception.PasswordMismatchException;
 import com.piixl.auth_service.exception.TooYoungException;
 import com.piixl.auth_service.exception.UserExistsException;
-import com.piixl.auth_service.model.*;
+import com.piixl.auth_service.model.RegisterRequest;
+import com.piixl.auth_service.model.RegisterResponse;
+import com.piixl.auth_service.model.Role;
+import com.piixl.auth_service.model.UserExistenceResponse;
+import com.piixl.auth_service.model.UserEvent;
+import com.piixl.auth_service.model.LoginRequest;
+import com.piixl.auth_service.model.UserEntity;
 import com.piixl.auth_service.repository.UserRepository;
 import com.piixl.auth_service.security.JwtUtil;
 import org.slf4j.Logger;
@@ -24,8 +30,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.HashMap;
-import java.util.Map;
+
 
 @Service
 public class AuthService {

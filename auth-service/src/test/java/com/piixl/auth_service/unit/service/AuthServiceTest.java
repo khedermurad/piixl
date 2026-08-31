@@ -183,9 +183,10 @@ public class AuthServiceTest {
         when(userRepository.existsByUsername(username)).thenReturn(true);
         when(userRepository.existsByEmail(email)).thenReturn(true);
 
-        Map<String, Boolean> result = authService.checkUserExistence(username, email);
-        assertTrue(result.get("emailExists"));
-        assertTrue(result.get("usernameExists"));
+        UserExistenceResponse result = authService.checkUserExistence(username, email);
+
+        assertTrue(result.emailExists());
+        assertTrue(result.usernameExists());
     }
 
     @Test
@@ -196,9 +197,9 @@ public class AuthServiceTest {
         when(userRepository.existsByUsername(username)).thenReturn(false);
         when(userRepository.existsByEmail(email)).thenReturn(false);
 
-        Map<String, Boolean> result = authService.checkUserExistence(username, email);
-        assertFalse(result.get("emailExists"));
-        assertFalse(result.get("usernameExists"));
+        UserExistenceResponse result = authService.checkUserExistence(username, email);
+        assertFalse(result.emailExists());
+        assertFalse(result.usernameExists());
     }
 
     @Test
@@ -207,10 +208,10 @@ public class AuthServiceTest {
         String email = "";
 
 
-        Map<String, Boolean> result = authService.checkUserExistence(username, email);
+        UserExistenceResponse result = authService.checkUserExistence(username, email);
 
-        assertNull(result.get("emailExists"));
-        assertNull(result.get("usernameExists"));
+        assertNull(result.emailExists());
+        assertNull(result.usernameExists());
 
         verify(userRepository, never()).existsByUsername(anyString());
         verify(userRepository, never()).existsByEmail(anyString());

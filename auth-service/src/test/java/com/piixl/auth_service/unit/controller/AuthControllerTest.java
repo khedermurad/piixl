@@ -8,6 +8,7 @@ import com.piixl.auth_service.exception.GlobalExceptionHandler;
 import com.piixl.auth_service.model.LoginRequest;
 import com.piixl.auth_service.model.RegisterRequest;
 import com.piixl.auth_service.model.RegisterResponse;
+import com.piixl.auth_service.model.UserExistenceResponse;
 import com.piixl.auth_service.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -225,9 +226,7 @@ public class AuthControllerTest {
 
     @Test
     void shouldReturnTrueForEmailWhenCheckExistenceAndEmailIsAvailable() throws Exception{
-        Map<String, Boolean> result = new HashMap<>();
-        result.put("emailExists", true);
-        result.put("usernameExists", null);
+        UserExistenceResponse result = new UserExistenceResponse(null, true);
 
         when(authService.checkUserExistence(isNull(), anyString())).thenReturn(result);
 
@@ -240,9 +239,7 @@ public class AuthControllerTest {
 
     @Test
     void shouldReturnFalseForUsernameWhenCheckExistenceAndUsernameIsNotAvailable() throws Exception{
-        Map<String, Boolean> result = new HashMap<>();
-        result.put("emailExists", null);
-        result.put("usernameExists", false);
+        UserExistenceResponse result = new UserExistenceResponse(false, null);
 
         when(authService.checkUserExistence(anyString(), isNull())).thenReturn(result);
 
@@ -256,9 +253,7 @@ public class AuthControllerTest {
 
     @Test
     void shouldReturnFalseForUsernameAndEmailWhenCheckExistenceAndUsernameAndEmailAreNotAvailable() throws Exception{
-        Map<String, Boolean> result = new HashMap<>();
-        result.put("emailExists", false);
-        result.put("usernameExists", false);
+        UserExistenceResponse result = new UserExistenceResponse(false, false);
 
         when(authService.checkUserExistence(anyString(), anyString())).thenReturn(result);
 
@@ -272,9 +267,7 @@ public class AuthControllerTest {
 
     @Test
     void shouldReturnTrueForUsernameAndEmailWhenCheckExistenceAndUsernameAndEmailAreAvailable() throws Exception{
-        Map<String, Boolean> result = new HashMap<>();
-        result.put("emailExists", true);
-        result.put("usernameExists", true);
+        UserExistenceResponse result = new UserExistenceResponse(true, true);
 
         when(authService.checkUserExistence(anyString(), anyString())).thenReturn(result);
 
