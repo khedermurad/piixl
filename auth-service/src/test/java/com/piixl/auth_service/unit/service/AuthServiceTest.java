@@ -176,7 +176,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    void shouldReturnMapWithTrueValuesWhenUsernameAndEmailExists(){
+    void shouldReturnResponseWithTrueValuesWhenUsernameAndEmailExists(){
         String username = "testUser";
         String email = "testEmail";
 
@@ -190,7 +190,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    void shouldReturnMapWithFalseValuesWhenUsernameAndEmailDoNotExists(){
+    void shouldReturnResponseWithFalseValuesWhenUsernameAndEmailDoNotExists(){
         String username = "testUser";
         String email = "testEmail";
 
@@ -203,7 +203,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    void shouldReturnMapWithNullValuesWhenUsernameAndEmailAreBlank(){
+    void shouldReturnResponseWithNullValuesWhenUsernameAndEmailAreBlank(){
         String username = "";
         String email = "";
 
@@ -218,7 +218,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    void shouldReturnMapWithNullValueForEmailAndTrueForUsernameWhenUsernameIsSpecifiedAndEmailIsNotSpecified(){
+    void shouldReturnResponseWithNullValueForEmailAndTrueForUsernameWhenUsernameIsSpecifiedAndEmailIsNotSpecified(){
         String username = "testUser";
         String email = "";
 
@@ -233,7 +233,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    void shouldReturnMapWithNullValueForUsernameAndFalseForEmailWhenUsernameIsSpecifiedAndEmailIsNotSpecified(){
+    void shouldReturnResponseWithNullValueForUsernameAndFalseForEmailWhenUsernameIsNotSpecifiedAndEmailIsSpecified(){
         String username = "";
         String email = "test@test.com";
 
