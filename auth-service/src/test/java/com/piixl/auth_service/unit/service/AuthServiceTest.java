@@ -176,7 +176,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    void shouldReturnMapWithTrueValuesWhenWhenUsernameAndEmailExists(){
+    void shouldReturnMapWithTrueValuesWhenUsernameAndEmailExists(){
         String username = "testUser";
         String email = "testEmail";
 
@@ -190,7 +190,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    void shouldReturnMapWithFalseValuesWhenWhenUsernameAndEmailDoNotExists(){
+    void shouldReturnMapWithFalseValuesWhenUsernameAndEmailDoNotExists(){
         String username = "testUser";
         String email = "testEmail";
 
@@ -203,7 +203,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    void shouldReturnMapWithNullValuesWhenWhenUsernameAndEmailAreBlank(){
+    void shouldReturnMapWithNullValuesWhenUsernameAndEmailAreBlank(){
         String username = "";
         String email = "";
 
@@ -216,6 +216,38 @@ public class AuthServiceTest {
         verify(userRepository, never()).existsByUsername(anyString());
         verify(userRepository, never()).existsByEmail(anyString());
     }
+
+    @Test
+    void shouldReturnMapWithNullValueForEmailAndTrueForUsernameWhenUsernameIsSpecifiedAndEmailIsNotSpecified(){
+        String username = "testUser";
+        String email = "";
+
+        when(userRepository.existsByUsername(username)).thenReturn(true);
+
+        UserExistenceResponse result = authService.checkUserExistence(username, email);
+
+        assertTrue(result.usernameExists());
+        assertNull(result.emailExists());
+
+        verify(userRepository, never()).existsByEmail(anyString());
+    }
+
+    @Test
+    void shouldReturnMapWithNullValueForUsernameAndFalseForEmailWhenUsernameIsSpecifiedAndEmailIsNotSpecified(){
+        String username = "";
+        String email = "test@test.com";
+
+        when(userRepository.existsByEmail(email)).thenReturn(false);
+
+        UserExistenceResponse result = authService.checkUserExistence(username, email);
+
+        assertNull(result.usernameExists());
+        assertFalse(result.emailExists());
+
+        verify(userRepository, never()).existsByUsername(anyString());
+    }
+
+
 
 
     static RegisterRequest validRegisterRequest(){
