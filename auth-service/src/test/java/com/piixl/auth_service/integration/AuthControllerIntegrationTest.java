@@ -410,7 +410,7 @@ public class AuthControllerIntegrationTest {
     }
 
     @Test
-    void shouldReturnOkAndTrueForProvidedParameterAndNullForNotProvidedParameterWhenCheckExistence() throws Exception {
+    void shouldReturnOkAndTrueForProvidedUsernameParameterAndNullForNotProvidedEmailParameterWhenCheckExistence() throws Exception {
         RegisterRequest registerRequest = validRegisterRequest();
         String registerString = objectMapper.writeValueAsString(registerRequest);
 
@@ -424,6 +424,23 @@ public class AuthControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.usernameExists").value(is(true)))
                 .andExpect(jsonPath("$.emailExists").value(nullValue()));
+    }
+
+    @Test
+    void shouldReturnOkAndTrueForProvidedEmailParameterAndNullForNotProvidedUsernameParameterWhenCheckExistence() throws Exception {
+        RegisterRequest registerRequest = validRegisterRequest();
+        String registerString = objectMapper.writeValueAsString(registerRequest);
+
+        mockMvc.perform(post("/api/auth/register")
+                        .content(registerString)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/auth/check-existence")
+                        .param("email", registerRequest.getEmail()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.usernameExists").value(nullValue()))
+                .andExpect(jsonPath("$.emailExists").value(is(true)));
     }
 
 
