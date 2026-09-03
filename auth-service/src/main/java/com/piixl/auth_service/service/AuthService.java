@@ -7,9 +7,10 @@ import com.piixl.auth_service.exception.UserExistsException;
 import com.piixl.auth_service.model.RegisterRequest;
 import com.piixl.auth_service.model.RegisterResponse;
 import com.piixl.auth_service.model.Role;
-import com.piixl.auth_service.model.UserEntity;
+import com.piixl.auth_service.model.UserExistenceResponse;
 import com.piixl.auth_service.model.UserEvent;
 import com.piixl.auth_service.model.LoginRequest;
+import com.piixl.auth_service.model.UserEntity;
 import com.piixl.auth_service.repository.UserRepository;
 import com.piixl.auth_service.security.JwtUtil;
 import org.slf4j.Logger;
@@ -25,9 +26,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.Period;
+
 
 @Service
 public class AuthService {
@@ -116,6 +119,18 @@ public class AuthService {
         Role userRole = Role.valueOf(roleName.replace("ROLE_", ""));
 
         return jwtUtil.generateToken(authentication.getName(), userRole, user.getId());
+    }
+
+    public UserExistenceResponse checkUserExistence(String username, String email){
+        Boolean usernameExists = StringUtils.hasText(username)
+                ? userRepository.existsByUsername(username)
+                : null;
+
+        Boolean emailExists = StringUtils.hasText(email)
+                ? userRepository.existsByEmail(email)
+                : null;
+
+        return new UserExistenceResponse(usernameExists, emailExists);
     }
 
 

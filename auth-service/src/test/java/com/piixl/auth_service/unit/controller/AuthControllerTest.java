@@ -8,6 +8,7 @@ import com.piixl.auth_service.exception.GlobalExceptionHandler;
 import com.piixl.auth_service.model.LoginRequest;
 import com.piixl.auth_service.model.RegisterRequest;
 import com.piixl.auth_service.model.RegisterResponse;
+import com.piixl.auth_service.model.UserExistenceResponse;
 import com.piixl.auth_service.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,15 +20,18 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.validation.beanvalidation.MethodValidationPostProcessor;
 
 import java.time.LocalDate;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.hamcrest.Matchers.is;
 
 @ExtendWith(MockitoExtension.class)
 public class AuthControllerTest {
@@ -45,8 +49,16 @@ public class AuthControllerTest {
     void setUp(){
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
-        mockMvc = MockMvcBuilders.standaloneSetup(authController)
-                .setControllerAdvice(new GlobalExceptionHandler()).build();
+
+        MethodValidationPostProcessor validationPostProcessor = new MethodValidationPostProcessor();
+        validationPostProcessor.afterPropertiesSet();
+
+        Object validatedController = validationPostProcessor
+                .postProcessAfterInitialization(authController, "authController");
+
+        mockMvc = MockMvcBuilders.standaloneSetup(validatedController)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
     }
 
     @Test
@@ -181,6 +193,89 @@ public class AuthControllerTest {
                 .andExpect(cookie().maxAge("auth_token", 0))
                 .andExpect(cookie().sameSite("auth_token", "Lax"));
     }
+
+    @Test
+    void shouldReturnBadRequestWhenRequestCheckExistenceWithoutRequestParameter() throws Exception{
+        mockMvc.perform(get("/api/auth/check-existence")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenCheckExistenceAndUsernameIsNotBetween5And20Letters() throws Exception{
+        mockMvc.perform(get("/api/auth/check-existence?username=abcd")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenCheckExistenceAndUsernameDoesNotStartWith5Letters() throws Exception{
+        mockMvc.perform(get("/api/auth/check-existence?username=45651")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenCheckExistenceAndEmailIsNotValid() throws Exception{
+        mockMvc.perform(get("/api/auth/check-existence?email=thisismyemail")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturnTrueForEmailWhenCheckExistenceAndEmailIsAvailable() throws Exception{
+        UserExistenceResponse result = new UserExistenceResponse(null, true);
+
+        when(authService.checkUserExistence(isNull(), anyString())).thenReturn(result);
+
+        mockMvc.perform(get("/api/auth/check-existence?email=test@email.com")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.emailExists", is(true)))
+                .andExpect(jsonPath("$.usernameExists", is(nullValue())));
+    }
+
+    @Test
+    void shouldReturnFalseForUsernameWhenCheckExistenceAndUsernameIsNotAvailable() throws Exception{
+        UserExistenceResponse result = new UserExistenceResponse(false, null);
+
+        when(authService.checkUserExistence(anyString(), isNull())).thenReturn(result);
+
+        mockMvc.perform(get("/api/auth/check-existence?username=testUser")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.emailExists", is(nullValue())))
+                .andExpect(jsonPath("$.usernameExists", is(false)));
+    }
+
+
+    @Test
+    void shouldReturnFalseForUsernameAndEmailWhenCheckExistenceAndUsernameAndEmailAreNotAvailable() throws Exception{
+        UserExistenceResponse result = new UserExistenceResponse(false, false);
+
+        when(authService.checkUserExistence(anyString(), anyString())).thenReturn(result);
+
+        mockMvc.perform(get("/api/auth/check-existence?username=testUser&email=test@test.com")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.emailExists", is(false)))
+                .andExpect(jsonPath("$.usernameExists", is(false)));
+    }
+
+
+    @Test
+    void shouldReturnTrueForUsernameAndEmailWhenCheckExistenceAndUsernameAndEmailAreAvailable() throws Exception{
+        UserExistenceResponse result = new UserExistenceResponse(true, true);
+
+        when(authService.checkUserExistence(anyString(), anyString())).thenReturn(result);
+
+        mockMvc.perform(get("/api/auth/check-existence?username=testUser&email=test@test.com")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.emailExists", is(true)))
+                .andExpect(jsonPath("$.usernameExists", is(true)));
+    }
+
 
 
 

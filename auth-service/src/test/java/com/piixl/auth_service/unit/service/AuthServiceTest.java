@@ -174,6 +174,80 @@ public class AuthServiceTest {
         verify(jwtUtil, never()).generateToken(anyString(), any(Role.class), eq(12L));
     }
 
+    @Test
+    void shouldReturnResponseWithTrueValuesWhenUsernameAndEmailExists(){
+        String username = "testUser";
+        String email = "testEmail";
+
+        when(userRepository.existsByUsername(username)).thenReturn(true);
+        when(userRepository.existsByEmail(email)).thenReturn(true);
+
+        UserExistenceResponse result = authService.checkUserExistence(username, email);
+
+        assertTrue(result.emailExists());
+        assertTrue(result.usernameExists());
+    }
+
+    @Test
+    void shouldReturnResponseWithFalseValuesWhenUsernameAndEmailDoNotExists(){
+        String username = "testUser";
+        String email = "testEmail";
+
+        when(userRepository.existsByUsername(username)).thenReturn(false);
+        when(userRepository.existsByEmail(email)).thenReturn(false);
+
+        UserExistenceResponse result = authService.checkUserExistence(username, email);
+        assertFalse(result.emailExists());
+        assertFalse(result.usernameExists());
+    }
+
+    @Test
+    void shouldReturnResponseWithNullValuesWhenUsernameAndEmailAreBlank(){
+        String username = "";
+        String email = "";
+
+
+        UserExistenceResponse result = authService.checkUserExistence(username, email);
+
+        assertNull(result.emailExists());
+        assertNull(result.usernameExists());
+
+        verify(userRepository, never()).existsByUsername(anyString());
+        verify(userRepository, never()).existsByEmail(anyString());
+    }
+
+    @Test
+    void shouldReturnResponseWithNullValueForEmailAndTrueForUsernameWhenUsernameIsSpecifiedAndEmailIsNotSpecified(){
+        String username = "testUser";
+        String email = "";
+
+        when(userRepository.existsByUsername(username)).thenReturn(true);
+
+        UserExistenceResponse result = authService.checkUserExistence(username, email);
+
+        assertTrue(result.usernameExists());
+        assertNull(result.emailExists());
+
+        verify(userRepository, never()).existsByEmail(anyString());
+    }
+
+    @Test
+    void shouldReturnResponseWithNullValueForUsernameAndFalseForEmailWhenUsernameIsNotSpecifiedAndEmailIsSpecified(){
+        String username = "";
+        String email = "test@test.com";
+
+        when(userRepository.existsByEmail(email)).thenReturn(false);
+
+        UserExistenceResponse result = authService.checkUserExistence(username, email);
+
+        assertNull(result.usernameExists());
+        assertFalse(result.emailExists());
+
+        verify(userRepository, never()).existsByUsername(anyString());
+    }
+
+
+
 
     static RegisterRequest validRegisterRequest(){
         return RegisterRequest.builder()
